@@ -10,7 +10,7 @@
 #include <windows.h>
 #endif
 
-// --- 将数据定义为全局常量，方便主函数访问范围 ---
+// --- 将数据定义为全局常量 ---
 // x: 速度 (公里/小时)
 const std::vector<double> speedsKph = {
     60.0 / 7.5,  // 8.00
@@ -24,18 +24,13 @@ const std::vector<double> speedsKph = {
     60.0 / 3.7,  // 16.22
     60.0 / 3.4   // 17.65
 };
-// y1: 能量消耗率 (千焦/小时/公斤)
-const std::vector<double> kjPerHourPerKg = {
-    33.0, 42.0, 46.0, 48.0, 52.0, 56.0, 59.0, 63.0, 67.0, 75.0
-};
-// y2: 代谢当量 (METs)
+// y: 代谢当量 (METs) - 现在是唯一的Y值数据
 const std::vector<double> mets = {
     8.0, 10.0, 11.0, 11.5, 12.5, 13.5, 14.0, 15.0, 16.0, 18.0
 };
 
 
 // 函数声明
-double calculateEnergyExpenditure(double totalTimeMin, double distanceKm, double weightKg);
 double getInterpolatedValue(double userSpeed, const std::vector<double>& x_data, const std::vector<double>& y_data);
 
 int main() {
@@ -62,7 +57,7 @@ int main() {
     std::cout << "请输入您的体重（公斤）: ";
     std::cin >> weightKg;
 
-    // 进行输入验证
+    // 输入验证
     if (timeMin < 0 || timeSec < 0 || timeSec >= 60 || distanceKm <= 0 || weightKg <= 0) {
         std::cerr << "错误：输入值不合法。时间不能为负，秒数需小于60，距离和体重必须为正数。" << std::endl;
         return 1;
@@ -71,7 +66,7 @@ int main() {
     double totalTimeInMinutes = timeMin + (timeSec / 60.0);
     double userSpeedKmh = (totalTimeInMinutes > 0) ? (distanceKm / (totalTimeInMinutes / 60.0)) : 0;
     
-    // --- 计算其他速度和配速单位 ---
+    // 计算其他速度和配速单位
     double speedMps = userSpeedKmh / 3.6;
     double paceDecimal = (userSpeedKmh > 0) ? (60.0 / userSpeedKmh) : 0;
     int paceMinutes = static_cast<int>(paceDecimal);
@@ -82,7 +77,6 @@ int main() {
     std::cout << "               " << "(" << speedMps << " 米/秒 (m/s))" << std::endl;
     std::cout << "您的平均配速是: " << paceMinutes << "分" << paceSeconds << "秒 / 公里" << std::endl;
     
-
     // 速度范围检查
     if (userSpeedKmh < speedsKph.front() || userSpeedKmh > speedsKph.back()) {
         std::cout << "\n错误：您的速度不在有效计算范围内。" << std::endl;
@@ -91,25 +85,29 @@ int main() {
         return 1;
     }
     
-    // --- 主要计算部分 ---
-    double totalKj = calculateEnergyExpenditure(totalTimeInMinutes, distanceKm, weightKg);
-    const double KJ_TO_KCAL_CONVERSION_FACTOR = 4.184;
-    double totalKcal = totalKj / KJ_TO_KCAL_CONVERSION_FACTOR;
-    
-    // --- 新增：计算等效静坐时间 ---
+    // ++++++++++ 主要计算逻辑（已更新）++++++++++
+    // 1. 获取运动的平均METs值
     double averageMets = getInterpolatedValue(userSpeedKmh, speedsKph, mets);
+    
+    // 2. 根据METs核心公式计算总千卡(kcal)
+    // 核心公式: 总热量(kcal) = METs * 体重(kg) * 时间(小时)
+    double totalKcal = averageMets * weightKg * (totalTimeInMinutes / 60.0);
+    
+    // 3. 将千卡换算为千焦(kJ)
+    const double KJ_PER_KCAL = 4.184;
+    double totalKj = totalKcal * KJ_PER_KCAL;
+    
+    // 4. 计算等效静坐时间
     double equivalentRestingMinutes = averageMets * totalTimeInMinutes;
     int equivalentHours = static_cast<int>(equivalentRestingMinutes / 60);
     int equivalentMinutesPart = static_cast<int>(round(fmod(equivalentRestingMinutes, 60.0)));
-    // ---
+    // +++++++++++++++++++++++++++++++++++++++++++
 
     // --- 结果输出部分 ---
     std::cout << "\n计算结果:" << std::endl;
     std::cout << "本次运动平均代谢当量 (METs): " << averageMets << std::endl;
     std::cout << "您消耗的总热量约为: " << totalKj << " 千焦 (kJ)" << std::endl;
     std::cout << "                  " << "或 " << totalKcal << " 千卡/大卡 (kcal)" << std::endl;
-    
-    // --- 新增的输出 ---
     std::cout << "\n从消耗热量来看，本次跑步相当于静坐了：" << std::endl;
     std::cout << equivalentHours << " 小时 " << equivalentMinutesPart << " 分钟" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
@@ -118,7 +116,7 @@ int main() {
 }
 
 /**
- * @brief 根据用户速度，从数据表中插值计算一个Y值（如消耗率或METs）
+ * @brief 根据用户速度，从数据表中插值计算一个Y值（如METs）
  * @param userSpeed 用户的速度 (km/h)
  * @param x_data 速度数据表 (横坐标)
  * @param y_data 需要计算的Y值数据表 (纵坐标)
@@ -145,15 +143,4 @@ double getInterpolatedValue(double userSpeed, const std::vector<double>& x_data,
         }
     }
     return interpolatedValue;
-}
-
-
-double calculateEnergyExpenditure(double totalTimeMin, double distanceKm, double weightKg) {
-    double userSpeedKph = (totalTimeMin > 0) ? (distanceKm / (totalTimeMin / 60.0)) : 0;
-    
-    // 调用通用插值函数来获取消耗率
-    double interpolatedKjRate = getInterpolatedValue(userSpeedKph, speedsKph, kjPerHourPerKg);
-    
-    double totalKj = interpolatedKjRate * weightKg * (totalTimeMin / 60.0);
-    return totalKj;
 }
