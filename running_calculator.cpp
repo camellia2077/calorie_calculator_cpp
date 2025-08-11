@@ -10,10 +10,10 @@
 #include <windows.h>
 #endif
 
-// --- 包含我们自己的骑行数据头文件 ---
-#include "cycling_data.h"
+// --- 包含我们自己的数据头文件 ---
+#include "running_data.h"
 
-// --- 全局数据常量现在已经移到 cycling_data.h 中 ---
+// --- 全局数据常量现在已经移到 running_data.h 中 ---
 
 
 // --- 创建一个结构体来统一管理所有数据 ---
@@ -70,17 +70,17 @@ int main() {
 // =================================================================
 
 /**
- * @brief 获取用户的骑行数据
+ * @brief 获取用户的跑步数据
  */
 void getUserInput(WorkoutData& data) {
-    std::cout << "请输入您的骑行时间（小时部分）: ";
+    std::cout << "请输入您的跑步时间（小时部分）: ";
     std::cin >> data.timeHr;
-    std::cout << "请输入您的骑行时间（分钟部分）: ";
+    std::cout << "请输入您的跑步时间（分钟部分）: ";
     std::cin >> data.timeMin;
-    std::cout << "请输入您的骑行时间（秒的部分）: ";
+    std::cout << "请输入您的跑步时间（秒的部分）: ";
     std::cin >> data.timeSec;
 
-    std::cout << "请输入您的骑行距离（公里）: ";
+    std::cout << "请输入您的跑步距离（公里）: ";
     std::cin >> data.distanceKm;
 
     std::cout << "请输入您的体重（公斤）: ";
@@ -104,11 +104,11 @@ bool calculateResults(WorkoutData& data) {
     data.userSpeedKmh = (data.totalTimeInMinutes > 0) ? (data.distanceKm / (data.totalTimeInMinutes / 60.0)) : 0;
     
     // --- 修改：速度范围检查现在使用新的数据结构 ---
-    if (data.userSpeedKmh < cyclingData.front().speedKph || data.userSpeedKmh > cyclingData.back().speedKph) {
+    if (data.userSpeedKmh < runningData.front().speedKph || data.userSpeedKmh > runningData.back().speedKph) {
         std::cout << "\n----------------------------------------" << std::endl;
         std::cout << "您的平均速度是: " << data.userSpeedKmh << " 公里/小时 (km/h)" << std::endl;
         std::cout << "\n错误：您的速度不在有效计算范围内。" << std::endl;
-        std::cout << "本程序可计算的速度范围为 " << cyclingData.front().speedKph << " 到 " << cyclingData.back().speedKph << " 公里/小时。" << std::endl;
+        std::cout << "本程序可计算的速度范围为 " << runningData.front().speedKph << " 到 " << runningData.back().speedKph << " 公里/小时。" << std::endl;
         std::cout << "----------------------------------------" << std::endl;
         return false;
     }
@@ -120,7 +120,7 @@ bool calculateResults(WorkoutData& data) {
     data.paceSeconds = static_cast<int>(round((paceDecimal - data.paceMinutes) * 60.0));
     
     // --- 修改：核心热量计算现在使用新的数据结构 ---
-    data.averageMets = getInterpolatedValue(data.userSpeedKmh, cyclingData);
+    data.averageMets = getInterpolatedValue(data.userSpeedKmh, runningData);
     data.totalKcal = data.averageMets * data.weightKg * (data.totalTimeInMinutes / 60.0);
     const double KJ_PER_KCAL = 4.184;
     data.totalKj = data.totalKcal * KJ_PER_KCAL;
@@ -143,10 +143,10 @@ void displayResults(const WorkoutData& data) {
     std::cout << "您的平均配速是: " << data.paceMinutes << "分" << data.paceSeconds << "秒 / 公里" << std::endl;
 
     std::cout << "\n计算结果:" << std::endl;
-    std::cout << "本次骑行平均代谢当量 (METs): " << data.averageMets << std::endl;
+    std::cout << "本次运动平均代谢当量 (METs): " << data.averageMets << std::endl;
     std::cout << "您消耗的总热量约为: " << data.totalKj << " 千焦 (kJ)" << std::endl;
     std::cout << "                  " << "或 " << data.totalKcal << " 千卡/大卡 (kcal)" << std::endl;
-    std::cout << "\n从消耗热量来看，本次骑行相当于静坐了：" << std::endl;
+    std::cout << "\n从消耗热量来看，本次跑步相当于静坐了：" << std::endl;
     std::cout << data.equivalentHours << " 小时 " << data.equivalentMinutes << " 分钟" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
 }
