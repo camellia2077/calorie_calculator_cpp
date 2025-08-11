@@ -68,9 +68,12 @@ int main() {
     // 设置cout输出小数点后两位的精度
     std::cout << std::fixed << std::setprecision(2);
 
-    double timeMin = 0, timeSec = 0, distanceKm = 0, weightKg = 0;
+    // --- 修改：增加了 timeHr 变量 ---
+    double timeHr = 0, timeMin = 0, timeSec = 0, distanceKm = 0, weightKg = 0;
 
-    // --- 输入部分 ---
+    // --- 修改：更新了输入部分 ---
+    std::cout << "请输入您的跑步时间（小时部分）: ";
+    std::cin >> timeHr;
     std::cout << "请输入您的跑步时间（分钟部分）: ";
     std::cin >> timeMin;
     std::cout << "请输入您的跑步时间（秒的部分）: ";
@@ -82,13 +85,14 @@ int main() {
     std::cout << "请输入您的体重（公斤）: ";
     std::cin >> weightKg;
 
-    // 输入验证
-    if (timeMin < 0 || timeSec < 0 || timeSec >= 60 || distanceKm <= 0 || weightKg <= 0) {
-        std::cerr << "错误：输入值不合法。时间不能为负，秒数需小于60，距离和体重必须为正数。" << std::endl;
+    // --- 修改：更新了输入验证 ---
+    if (timeHr < 0 || timeMin < 0 || timeMin >= 60 || timeSec < 0 || timeSec >= 60 || distanceKm <= 0 || weightKg <= 0) {
+        std::cerr << "错误：输入值不合法。时间不能为负，分钟和秒数需小于60，距离和体重必须为正数。" << std::endl;
         return 1;
     }
 
-    double totalTimeInMinutes = timeMin + (timeSec / 60.0);
+    // --- 修改：更新了总分钟数的计算公式 ---
+    double totalTimeInMinutes = (timeHr * 60.0) + timeMin + (timeSec / 60.0);
     double userSpeedKmh = (totalTimeInMinutes > 0) ? (distanceKm / (totalTimeInMinutes / 60.0)) : 0;
     
     // 计算其他速度和配速单位
