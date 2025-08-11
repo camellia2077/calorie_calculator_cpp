@@ -1,0 +1,1 @@
+g++ calorie_calculator.cpp -o calorie_calculator
