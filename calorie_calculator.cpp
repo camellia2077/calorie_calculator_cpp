@@ -55,98 +55,156 @@ const std::vector<double> mets = {
 };
 
 
-// 函数声明
+// --- 创建一个结构体来统一管理所有数据 ---
+struct WorkoutData {
+    // 用户输入
+    double timeHr = 0, timeMin = 0, timeSec = 0;
+    double distanceKm = 0, weightKg = 0;
+
+    // 计算出的值
+    double totalTimeInMinutes = 0;
+    double userSpeedKmh = 0;
+    double speedMps = 0;
+    int paceMinutes = 0, paceSeconds = 0;
+    double averageMets = 0;
+    double totalKcal = 0, totalKj = 0;
+    int equivalentHours = 0, equivalentMinutes = 0;
+};
+
+// --- 函数声明 ---
+void getUserInput(WorkoutData& data);
+bool calculateResults(WorkoutData& data);
+void displayResults(const WorkoutData& data);
 double getInterpolatedValue(double userSpeed, const std::vector<double>& x_data, const std::vector<double>& y_data);
 
+
+// =================================================================
+// 主函数 (main) - 现在的“指挥中心”
+// =================================================================
 int main() {
-    // 设置控制台编码以支持中文 (UTF-8)
+    // 1. 环境设置
     #ifdef _WIN32
         SetConsoleOutputCP(CP_UTF8);
         SetConsoleCP(CP_UTF8);
     #endif
-
-    // 设置cout输出小数点后两位的精度
     std::cout << std::fixed << std::setprecision(2);
 
-    // --- 修改：增加了 timeHr 变量 ---
-    double timeHr = 0, timeMin = 0, timeSec = 0, distanceKm = 0, weightKg = 0;
+    // 2. 创建数据对象
+    WorkoutData workout;
 
-    // --- 修改：更新了输入部分 ---
-    std::cout << "请输入您的跑步时间（小时部分）: ";
-    std::cin >> timeHr;
-    std::cout << "请输入您的跑步时间（分钟部分）: ";
-    std::cin >> timeMin;
-    std::cout << "请输入您的跑步时间（秒的部分）: ";
-    std::cin >> timeSec;
+    // 3. 调用函数获取输入
+    getUserInput(workout);
 
-    std::cout << "请输入您的跑步距离（公里）: ";
-    std::cin >> distanceKm;
-
-    std::cout << "请输入您的体重（公斤）: ";
-    std::cin >> weightKg;
-
-    // --- 修改：更新了输入验证 ---
-    if (timeHr < 0 || timeMin < 0 || timeMin >= 60 || timeSec < 0 || timeSec >= 60 || distanceKm <= 0 || weightKg <= 0) {
-        std::cerr << "错误：输入值不合法。时间不能为负，分钟和秒数需小于60，距离和体重必须为正数。" << std::endl;
-        return 1;
+    // 4. 调用函数进行计算，并根据计算是否成功来决定是否显示结果
+    if (calculateResults(workout)) {
+        displayResults(workout);
     }
-
-    // --- 修改：更新了总分钟数的计算公式 ---
-    double totalTimeInMinutes = (timeHr * 60.0) + timeMin + (timeSec / 60.0);
-    double userSpeedKmh = (totalTimeInMinutes > 0) ? (distanceKm / (totalTimeInMinutes / 60.0)) : 0;
-    
-    // 计算其他速度和配速单位
-    double speedMps = userSpeedKmh / 3.6;
-    double paceDecimal = (userSpeedKmh > 0) ? (60.0 / userSpeedKmh) : 0;
-    int paceMinutes = static_cast<int>(paceDecimal);
-    int paceSeconds = static_cast<int>(round((paceDecimal - paceMinutes) * 60.0));
-
-    std::cout << "\n----------------------------------------" << std::endl;
-    std::cout << "您的平均速度是: " << userSpeedKmh << " 公里/小时 (km/h)" << std::endl;
-    std::cout << "               " << "(" << speedMps << " 米/秒 (m/s))" << std::endl;
-    std::cout << "您的平均配速是: " << paceMinutes << "分" << paceSeconds << "秒 / 公里" << std::endl;
-    
-    // 速度范围检查
-    if (userSpeedKmh < speedsKph.front() || userSpeedKmh > speedsKph.back()) {
-        std::cout << "\n错误：您的速度不在有效计算范围内。" << std::endl;
-        std::cout << "本程序可计算的速度范围为 " << speedsKph.front() << " 到 " << speedsKph.back() << " 公里/小时。" << std::endl;
-        std::cout << "----------------------------------------" << std::endl;
-        return 1;
-    }
-    
-    // ++++++++++ 主要计算逻辑 ++++++++++
-    double averageMets = getInterpolatedValue(userSpeedKmh, speedsKph, mets);
-    double totalKcal = averageMets * weightKg * (totalTimeInMinutes / 60.0);
-    const double KJ_PER_KCAL = 4.184;
-    double totalKj = totalKcal * KJ_PER_KCAL;
-    double equivalentRestingMinutes = averageMets * totalTimeInMinutes;
-    int equivalentHours = static_cast<int>(equivalentRestingMinutes / 60);
-    int equivalentMinutesPart = static_cast<int>(round(fmod(equivalentRestingMinutes, 60.0)));
-
-    // --- 结果输出部分 ---
-    std::cout << "\n计算结果:" << std::endl;
-    std::cout << "本次运动平均代谢当量 (METs): " << averageMets << std::endl;
-    std::cout << "您消耗的总热量约为: " << totalKj << " 千焦 (kJ)" << std::endl;
-    std::cout << "                  " << "或 " << totalKcal << " 千卡/大卡 (kcal)" << std::endl;
-    std::cout << "\n从消耗热量来看，本次跑步相当于静坐了：" << std::endl;
-    std::cout << equivalentHours << " 小时 " << equivalentMinutesPart << " 分钟" << std::endl;
-    std::cout << "----------------------------------------" << std::endl;
 
     return 0;
 }
+
+
+// =================================================================
+// 功能函数实现
+// =================================================================
+
+/**
+ * @brief 获取用户的跑步数据
+ * @param data 通过引用传递，函数将直接修改传入的WorkoutData对象
+ */
+void getUserInput(WorkoutData& data) {
+    std::cout << "请输入您的跑步时间（小时部分）: ";
+    std::cin >> data.timeHr;
+    std::cout << "请输入您的跑步时间（分钟部分）: ";
+    std::cin >> data.timeMin;
+    std::cout << "请输入您的跑步时间（秒的部分）: ";
+    std::cin >> data.timeSec;
+
+    std::cout << "请输入您的跑步距离（公里）: ";
+    std::cin >> data.distanceKm;
+
+    std::cout << "请输入您的体重（公斤）: ";
+    std::cin >> data.weightKg;
+}
+
+/**
+ * @brief 执行所有计算，并进行数据验证
+ * @param data 通过引用传递，函数将填充所有计算结果字段
+ * @return bool 如果计算和验证成功，返回true；如果速度超范围，返回false
+ */
+bool calculateResults(WorkoutData& data) {
+    // 输入验证
+    if (data.timeHr < 0 || data.timeMin < 0 || data.timeMin >= 60 || data.timeSec < 0 || data.timeSec >= 60 || data.distanceKm <= 0 || data.weightKg <= 0) {
+        std::cerr << "错误：输入值不合法。时间不能为负，分钟和秒数需小于60，距离和体重必须为正数。" << std::endl;
+        return false;
+    }
+
+    // 计算总时间
+    data.totalTimeInMinutes = (data.timeHr * 60.0) + data.timeMin + (data.timeSec / 60.0);
+    
+    // 计算速度
+    data.userSpeedKmh = (data.totalTimeInMinutes > 0) ? (data.distanceKm / (data.totalTimeInMinutes / 60.0)) : 0;
+    
+    // 速度范围检查
+    if (data.userSpeedKmh < speedsKph.front() || data.userSpeedKmh > speedsKph.back()) {
+        std::cout << "\n----------------------------------------" << std::endl;
+        std::cout << "您的平均速度是: " << data.userSpeedKmh << " 公里/小时 (km/h)" << std::endl;
+        std::cout << "\n错误：您的速度不在有效计算范围内。" << std::endl;
+        std::cout << "本程序可计算的速度范围为 " << speedsKph.front() << " 到 " << speedsKph.back() << " 公里/小时。" << std::endl;
+        std::cout << "----------------------------------------" << std::endl;
+        return false;
+    }
+
+    // 计算其他衍生值
+    data.speedMps = data.userSpeedKmh / 3.6;
+    double paceDecimal = (data.userSpeedKmh > 0) ? (60.0 / data.userSpeedKmh) : 0;
+    data.paceMinutes = static_cast<int>(paceDecimal);
+    data.paceSeconds = static_cast<int>(round((paceDecimal - data.paceMinutes) * 60.0));
+    
+    // 核心热量计算
+    data.averageMets = getInterpolatedValue(data.userSpeedKmh, speedsKph, mets);
+    data.totalKcal = data.averageMets * data.weightKg * (data.totalTimeInMinutes / 60.0);
+    const double KJ_PER_KCAL = 4.184;
+    data.totalKj = data.totalKcal * KJ_PER_KCAL;
+    
+    // 等效时间计算
+    double equivalentRestingMinutes = data.averageMets * data.totalTimeInMinutes;
+    data.equivalentHours = static_cast<int>(equivalentRestingMinutes / 60);
+    data.equivalentMinutes = static_cast<int>(round(fmod(equivalentRestingMinutes, 60.0)));
+    
+    return true;
+}
+
+/**
+ * @brief 将计算结果格式化并显示给用户
+ * @param data 通过const引用传递，保证函数不会修改数据
+ */
+void displayResults(const WorkoutData& data) {
+    std::cout << "\n----------------------------------------" << std::endl;
+    std::cout << "您的平均速度是: " << data.userSpeedKmh << " 公里/小时 (km/h)" << std::endl;
+    std::cout << "               " << "(" << data.speedMps << " 米/秒 (m/s))" << std::endl;
+    std::cout << "您的平均配速是: " << data.paceMinutes << "分" << data.paceSeconds << "秒 / 公里" << std::endl;
+
+    std::cout << "\n计算结果:" << std::endl;
+    std::cout << "本次运动平均代谢当量 (METs): " << data.averageMets << std::endl;
+    std::cout << "您消耗的总热量约为: " << data.totalKj << " 千焦 (kJ)" << std::endl;
+    std::cout << "                  " << "或 " << data.totalKcal << " 千卡/大卡 (kcal)" << std::endl;
+    std::cout << "\n从消耗热量来看，本次跑步相当于静坐了：" << std::endl;
+    std::cout << data.equivalentHours << " 小时 " << data.equivalentMinutes << " 分钟" << std::endl;
+    std::cout << "----------------------------------------" << std::endl;
+}
+
 
 /**
  * @brief 根据用户速度，从数据表中插值计算一个Y值（如METs）
  */
 double getInterpolatedValue(double userSpeed, const std::vector<double>& x_data, const std::vector<double>& y_data) {
     double interpolatedValue = 0.0;
-    
     if (userSpeed >= x_data.back()) {
         interpolatedValue = y_data.back();
     } else if (userSpeed <= x_data.front()) {
         interpolatedValue = y_data.front();
-    }
-    else {
+    } else {
         for (size_t i = 0; i < x_data.size() - 1; ++i) {
             if (userSpeed >= x_data[i] && userSpeed < x_data[i + 1]) {
                 double x1 = x_data[i];
