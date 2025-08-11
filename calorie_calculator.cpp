@@ -11,22 +11,47 @@
 #endif
 
 // --- 将数据定义为全局常量 ---
-// x: 速度 (公里/小时)
+// 数据来源: Compendium of Physical Activities (https://pacompendium.com/)
+// 原始单位为 mph (英里/小时)，已转换为 km/h (公里/小时)
+// 转换公式: 1 mph = 1.60934 km/h
 const std::vector<double> speedsKph = {
-    60.0 / 7.5,  // 8.00
-    60.0 / 6.25, // 9.60
-    60.0 / 5.5,  // 10.91
-    60.0 / 5.3,  // 11.32
-    60.0 / 5.0,  // 12.00
-    60.0 / 4.7,  // 12.77
-    60.0 / 4.3,  // 13.95
-    60.0 / 4.1,  // 14.63
-    60.0 / 3.7,  // 16.22
-    60.0 / 3.4   // 17.65
+    6.60,  // 4.1 mph (avg of 4-4.2)
+    7.32,  // 4.55 mph (avg of 4.3-4.8)
+    8.21,  // 5.1 mph (avg of 5.0-5.2)
+    9.09,  // 5.65 mph (avg of 5.5-5.8)
+    9.90,  // 6.15 mph (avg of 6-6.3)
+    10.78, // 6.7 mph
+    11.27, // 7 mph
+    12.07, // 7.5 mph
+    12.87, // 8 mph
+    13.84, // 8.6 mph
+    14.48, // 9 mph
+    15.21, // 9.45 mph (avg of 9.3-9.6)
+    16.09, // 10 mph
+    17.70, // 11 mph
+    19.31, // 12 mph
+    20.92, // 13 mph
+    22.53  // 14 mph
 };
-// y: 代谢当量 (METs) - 现在是唯一的Y值数据
+
 const std::vector<double> mets = {
-    8.0, 10.0, 11.0, 11.5, 12.5, 13.5, 14.0, 15.0, 16.0, 18.0
+    6.5,
+    7.8,
+    8.5,
+    9.0,
+    9.3,
+    10.5,
+    11.0,
+    11.8,
+    12.0,
+    12.5,
+    13.0,
+    14.8, // 对应 9.45 mph
+    14.8, // 对应 10 mph
+    16.8,
+    18.5,
+    19.8,
+    23.0
 };
 
 
@@ -85,23 +110,14 @@ int main() {
         return 1;
     }
     
-    // ++++++++++ 主要计算逻辑（已更新）++++++++++
-    // 1. 获取运动的平均METs值
+    // ++++++++++ 主要计算逻辑 ++++++++++
     double averageMets = getInterpolatedValue(userSpeedKmh, speedsKph, mets);
-    
-    // 2. 根据METs核心公式计算总千卡(kcal)
-    // 核心公式: 总热量(kcal) = METs * 体重(kg) * 时间(小时)
     double totalKcal = averageMets * weightKg * (totalTimeInMinutes / 60.0);
-    
-    // 3. 将千卡换算为千焦(kJ)
     const double KJ_PER_KCAL = 4.184;
     double totalKj = totalKcal * KJ_PER_KCAL;
-    
-    // 4. 计算等效静坐时间
     double equivalentRestingMinutes = averageMets * totalTimeInMinutes;
     int equivalentHours = static_cast<int>(equivalentRestingMinutes / 60);
     int equivalentMinutesPart = static_cast<int>(round(fmod(equivalentRestingMinutes, 60.0)));
-    // +++++++++++++++++++++++++++++++++++++++++++
 
     // --- 结果输出部分 ---
     std::cout << "\n计算结果:" << std::endl;
@@ -117,17 +133,13 @@ int main() {
 
 /**
  * @brief 根据用户速度，从数据表中插值计算一个Y值（如METs）
- * @param userSpeed 用户的速度 (km/h)
- * @param x_data 速度数据表 (横坐标)
- * @param y_data 需要计算的Y值数据表 (纵坐标)
- * @return double 插值计算后的Y值
  */
 double getInterpolatedValue(double userSpeed, const std::vector<double>& x_data, const std::vector<double>& y_data) {
     double interpolatedValue = 0.0;
     
-    if (userSpeed >= x_data.back()) { // 大于等于最大速度
+    if (userSpeed >= x_data.back()) {
         interpolatedValue = y_data.back();
-    } else if (userSpeed <= x_data.front()) { // 小于等于最小速度
+    } else if (userSpeed <= x_data.front()) {
         interpolatedValue = y_data.front();
     }
     else {
