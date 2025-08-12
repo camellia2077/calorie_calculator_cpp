@@ -1,6 +1,6 @@
 #include "Application.h"
-#include "running_data.h"
-#include "cycling_data.h"
+#include "data/running_data.h"
+#include "data/cycling_data.h"
 #include <string>
 #include <vector>
 

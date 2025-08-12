@@ -2,8 +2,8 @@
 #define CALCULATION_ENGINE_H
 
 #include <vector>
-#include "DataPoint.h"
-#include "WorkoutDomain.h"
+#include "domain/DataPoint.h"
+#include "domain/WorkoutDomain.h"
 
 class CalculationEngine {
 public:

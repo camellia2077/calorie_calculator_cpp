@@ -2,7 +2,7 @@
 #define CONSOLE_UI_H
 
 #include <string>
-#include "WorkoutDomain.h"
+#include "domain/WorkoutDomain.h"
 
 // 用户界面的头文件，负责声明所有与输入输出相关的功能。
 

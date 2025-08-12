@@ -4,7 +4,7 @@
 #include <limits>
 #include <vector>
 #include <algorithm>
-#include "food_data.h" // UI需要食物数据来显示
+#include "data/food_data.h" // UI需要食物数据来显示
 
 // 用户界面的实现文件，包含了所有的 cout 和 cin
 

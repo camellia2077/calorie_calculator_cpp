@@ -2,7 +2,7 @@
 #define RUNNING_DATA_H
 
 #include <vector>
-#include "DataPoint.h" // 包含数据点结构的定义
+#include "domain/DataPoint.h" // 包含数据点结构的定义
 
 // 将所有跑步数据存放在一个结构体向量中
 const std::vector<DataPoint> runningData = {

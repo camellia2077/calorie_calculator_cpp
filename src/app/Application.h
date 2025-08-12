@@ -2,7 +2,7 @@
 #define APPLICATION_H
 
 #include "ConsoleUI.h"
-#include "CalculationEngine.h"
+#include "core/CalculationEngine.h"
 
 class Application {
 public:
