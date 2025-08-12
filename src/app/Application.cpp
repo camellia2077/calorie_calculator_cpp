@@ -1,4 +1,4 @@
-#include "Application.h"
+#include "app/Application.h"
 #include "data/running_data.h"
 #include "data/cycling_data.h"
 #include <string>
@@ -33,8 +33,11 @@ void Application::run() {
     // 调用计算引擎进行核心计算
     WorkoutResults results = engine.calculate(params, dataTable);
 
-    // 显示结果
-    ui.displayResults(results, activityName);
+    // 调用食物转换器
+    auto foodEquivalents = foodConverter.calculate(results.totalKcal);
+
+    // 将所有结果传递给UI进行显示 (***这是唯一的、正确的调用***)
+    ui.displayResults(results, activityName, foodEquivalents);
 }
 
 bool Application::validateParameters(const WorkoutParameters& params) {

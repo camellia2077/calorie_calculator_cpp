@@ -3,8 +3,8 @@
 #include <iomanip>
 #include <limits>
 #include <vector>
-#include <algorithm>
-#include "data/food_data.h" // UI需要食物数据来显示
+// #include <algorithm>      <-- 不再需要
+// #include "data/food_data.h" <-- 不再需要
 
 // 用户界面的实现文件，包含了所有的 cout 和 cin
 
@@ -20,13 +20,15 @@ namespace { // 使用匿名命名空间来隐藏辅助函数
     }
 }
 
+// getSportChoice, getWorkoutParameters, displayError, displaySpeedError 函数与之前完全相同，此处省略以保持简洁...
+// ...
 int ConsoleUI::getSportChoice() {
     int choice = 0;
     std::cout << "请选择要计算的运动类型:" << std::endl;
     std::cout << "1. 跑步" << std::endl;
     std::cout << "2. 骑行" << std::endl;
     std::cout << "请输入选项 (1 或 2): ";
-    
+
     while (!(std::cin >> choice) || (choice != 1 && choice != 2)) {
         std::cout << "输入无效，请输入 1 或 2: ";
         std::cin.clear();
@@ -57,13 +59,18 @@ void ConsoleUI::displaySpeedError(double userSpeed, double minSpeed, double maxS
     std::cout << "本程序可计算的速度范围为 " << minSpeed << " 到 " << maxSpeed << " 公里/小时。" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
 }
+// ...
 
-void ConsoleUI::displayResults(const WorkoutResults& results, const std::string& activityName) {
-    const int labelWidth = 28; 
+// (*** 这是主要修改的部分 ***)
+void ConsoleUI::displayResults(const WorkoutResults& results,
+                               const std::string& activityName,
+                               const std::map<std::string, std::vector<FoodEquivalent>>& foodEquivalents) {
+    const int labelWidth = 28;
 
     std::cout << std::fixed << std::setprecision(1);
     std::cout << "========================================" << std::endl;
 
+    // [ 运动表现 ] 和 [ 热量消耗 ] 部分不变
     std::cout << "\n[ 运动表现 ]" << std::endl;
     std::cout << std::left << std::setw(labelWidth) << "  - 平均速度 (km/h): " << results.userSpeedKmh << std::endl;
     std::cout << std::left << std::setw(labelWidth) << "  - 平均速度 (m/s): " << results.speedMps << std::endl;
@@ -74,31 +81,23 @@ void ConsoleUI::displayResults(const WorkoutResults& results, const std::string&
     std::cout << std::left << std::setw(labelWidth) << "  - 总消耗 (千卡/大卡): " << results.totalKcal << std::endl;
     std::cout << std::left << std::setw(labelWidth) << "  - 总消耗 (千焦): " << results.totalKj << std::endl;
 
+    // [ 食物等效 ] 部分现在只负责显示
     std::cout << "\n[ 食物等效 ]" << std::endl;
     std::cout << "  本次消耗的热量，大约相当于：" << std::endl;
 
-    auto printCategory = [&](const std::string& categoryName, const std::vector<FoodData>& foods, const std::string& unit) {
-        std::cout << "\n  --- " << categoryName << " ---" << std::endl;
-        std::vector<FoodData> sortedFoods = foods;
-        std::sort(sortedFoods.begin(), sortedFoods.end(), [](const FoodData& a, const FoodData& b) {
-            return a.kcalPer100g < b.kcalPer100g;
-        });
-        for (const auto& food : sortedFoods) {
-            if (food.kcalPer100g > 0) {
-                double equivalentAmount = results.totalKcal / (food.kcalPer100g / 100.0);
-                std::cout << "    - " << std::fixed << std::setprecision(1) << equivalentAmount << unit << food.name 
-                          << " (" << food.kcalPer100g << " kcal/100g)" << std::endl;
-            }
-        }
-    };
-    
-    printCategory("常见水果", fruitData, " 克 ");
-    printCategory("常见蔬菜", vegetableData, " 克 ");
-    printCategory("常见主食", stapleFoodData, " 克 ");
-    printCategory("常见肉类/蛋白质", proteinData, " 克 ");
-    printCategory("常见零食", snackData, " 克 ");
-    printCategory("常见饮料", beverageData, " 毫升 ");
+    // 直接遍历预计算好的数据并打印
+    for (const auto& pair : foodEquivalents) {
+        const std::string& categoryName = pair.first;
+        const std::vector<FoodEquivalent>& foods = pair.second;
 
+        std::cout << "\n  --- " << categoryName << " ---" << std::endl;
+        for (const auto& food : foods) {
+            std::cout << "    - " << std::fixed << std::setprecision(1) << food.amount << " " << food.unit << " " << food.name
+                      << " (" << static_cast<int>(food.kcalPer100) << " kcal/100" << (food.unit == "克" ? "g" : "ml") << ")" << std::endl;
+        }
+    }
+
+    // [ 等效活动 ] 部分不变
     std::cout << "\n[ 等效活动 ]" << std::endl;
     std::cout << "  本次" << activityName << "从热量消耗来看，" << std::endl;
     std::cout << "  相当于静坐了：" << results.equivalentHours << " 小时 " << results.equivalentMinutes << " 分钟" << std::endl;
