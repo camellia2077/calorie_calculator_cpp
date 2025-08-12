@@ -3,10 +3,11 @@
 #include <iomanip>
 #include <cmath>
 #include <limits>
-#include "food_data.h" // --- 新增：引入食物热量数据 ---
+#include <vector>
+#include <algorithm>   // 引入 <algorithm> 以使用 std::sort
+#include "food_data.h" // 引入食物数据
 
 // --- A helper function for safe numeric input ---
-// This is best kept as a free-standing template function.
 template<typename T>
 void getNumericInput(T& value, const std::string& prompt) {
     std::cout << prompt;
@@ -44,19 +45,16 @@ void WorkoutCalculator::getUserInput() {
 
 // Performs all calculations and validations
 bool WorkoutCalculator::calculateResults() {
-    auto& data = currentWorkout; // Use an alias for cleaner code
+    auto& data = currentWorkout; 
 
-    // Validate the numerical ranges of the input
     if (data.timeHr < 0 || data.timeMin < 0 || data.timeMin >= 60 || data.timeSec < 0 || data.timeSec >= 60 || data.distanceKm <= 0 || data.weightKg <= 0) {
         std::cerr << "错误：输入值不合法。时间不能为负，分钟和秒数需小于60，距离和体重必须为正数。" << std::endl;
         return false;
     }
 
-    // Perform calculations and store results in the 'currentWorkout' member
     data.totalTimeInMinutes = (data.timeHr * 60.0) + data.timeMin + (data.timeSec / 60.0);
     data.userSpeedKmh = (data.totalTimeInMinutes > 0) ? (data.distanceKm / (data.totalTimeInMinutes / 60.0)) : 0;
     
-    // Check if the calculated speed is within the range of our data table
     if (data.userSpeedKmh < dataTable.front().speedKph || data.userSpeedKmh > dataTable.back().speedKph) {
         std::cout << "\n----------------------------------------" << std::endl;
         std::cout << "您的平均速度是: " << data.userSpeedKmh << " 公里/小时 (km/h)" << std::endl;
@@ -85,18 +83,15 @@ bool WorkoutCalculator::calculateResults() {
 
 // Displays the final formatted report to the user
 void WorkoutCalculator::displayResults() {
-    const auto& data = currentWorkout; // Use a const alias for read-only access
+    const auto& data = currentWorkout; 
     const int labelWidth = 28; 
 
-    // 设置输出格式为固定的，并保留一位小数
     std::cout << std::fixed << std::setprecision(1);
-
     std::cout << "========================================" << std::endl;
 
     std::cout << "\n[ 运动表现 ]" << std::endl;
     std::cout << std::left << std::setw(labelWidth) << "  - 平均速度 (km/h): " << data.userSpeedKmh << std::endl;
     std::cout << std::left << std::setw(labelWidth) << "  - 平均速度 (m/s): " << data.speedMps << std::endl;
-    // 重置 setw，因为它会影响后续输出
     std::cout << std::left << std::setw(0) << "  - 平均配速: " << data.paceMinutes << "分" << data.paceSeconds << "秒 / 公里" << std::endl;
 
     std::cout << "\n[ 热量消耗 ]" << std::endl;
@@ -104,16 +99,37 @@ void WorkoutCalculator::displayResults() {
     std::cout << std::left << std::setw(labelWidth) << "  - 总消耗 (千卡/大卡): " << data.totalKcal << std::endl;
     std::cout << std::left << std::setw(labelWidth) << "  - 总消耗 (千焦): " << data.totalKj << std::endl;
 
-    // --- 新增：食物等效换算 ---
     std::cout << "\n[ 食物等效 ]" << std::endl;
     std::cout << "  本次消耗的热量，大约相当于：" << std::endl;
-    for (const auto& food : foodCalorieData) {
-        if (food.kcalPer100g > 0) {
-            double equivalentGrams = data.totalKcal / (food.kcalPer100g / 100.0);
-            std::cout << "  - " << equivalentGrams << " 克" << food.name << std::endl;
+
+    // 辅助函数：打印一个类别的食物
+    auto printCategory = [&](const std::string& categoryName, const std::vector<FoodData>& foods, const std::string& unit) {
+        std::cout << "\n  --- " << categoryName << " ---" << std::endl;
+        
+        std::vector<FoodData> sortedFoods = foods;
+
+        // --- 修改点 ---
+        // 按热量**升序**（从低到高）对副本进行排序。
+        // 热量越低，意味着等量的消耗能吃/喝的克数/毫升数越多。
+        std::sort(sortedFoods.begin(), sortedFoods.end(), [](const FoodData& a, const FoodData& b) {
+            return a.kcalPer100g < b.kcalPer100g; // 将 > 改为 <
+        });
+        
+        for (const auto& food : sortedFoods) {
+            if (food.kcalPer100g > 0) {
+                double equivalentAmount = data.totalKcal / (food.kcalPer100g / 100.0);
+                std::cout << "    - " << std::fixed << std::setprecision(1) << equivalentAmount << unit << food.name 
+                          << " (" << food.kcalPer100g << " kcal/100g)" << std::endl;
+            }
         }
-    }
-    // --- 新增结束 ---
+    };
+    
+    printCategory("常见水果", fruitData, " 克 ");
+    printCategory("常见蔬菜", vegetableData, " 克 ");
+    printCategory("常见主食", stapleFoodData, " 克 ");
+    printCategory("常见肉类/蛋白质", proteinData, " 克 ");
+    printCategory("常见零食", snackData, " 克 ");
+    printCategory("常见饮料", beverageData, " 毫升 ");
 
     std::cout << "\n[ 等效活动 ]" << std::endl;
     std::cout << "  本次" << activityName << "从热量消耗来看，" << std::endl;
@@ -136,5 +152,5 @@ double WorkoutCalculator::getInterpolatedValue(double userSpeed) {
             return y1 + (userSpeed - x1) * (y2 - y1) / (x2 - x1);
         }
     }
-    return 0.0; // Should not be reached if speed is within bounds
+    return 0.0; 
 }
