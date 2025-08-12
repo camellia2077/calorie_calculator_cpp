@@ -2,7 +2,8 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
-#include <limits> // Used for input validation
+#include <limits>
+#include "food_data.h" // --- 新增：引入食物热量数据 ---
 
 // --- A helper function for safe numeric input ---
 // This is best kept as a free-standing template function.
@@ -87,17 +88,32 @@ void WorkoutCalculator::displayResults() {
     const auto& data = currentWorkout; // Use a const alias for read-only access
     const int labelWidth = 28; 
 
+    // 设置输出格式为固定的，并保留一位小数
+    std::cout << std::fixed << std::setprecision(1);
+
     std::cout << "========================================" << std::endl;
 
     std::cout << "\n[ 运动表现 ]" << std::endl;
     std::cout << std::left << std::setw(labelWidth) << "  - 平均速度 (km/h): " << data.userSpeedKmh << std::endl;
     std::cout << std::left << std::setw(labelWidth) << "  - 平均速度 (m/s): " << data.speedMps << std::endl;
-    std::cout << "  - 平均配速: " << data.paceMinutes << "分" << data.paceSeconds << "秒 / 公里" << std::endl;
+    // 重置 setw，因为它会影响后续输出
+    std::cout << std::left << std::setw(0) << "  - 平均配速: " << data.paceMinutes << "分" << data.paceSeconds << "秒 / 公里" << std::endl;
 
     std::cout << "\n[ 热量消耗 ]" << std::endl;
     std::cout << std::left << std::setw(labelWidth) << "  - 平均代谢当量 (METs): " << data.averageMets << std::endl;
     std::cout << std::left << std::setw(labelWidth) << "  - 总消耗 (千卡/大卡): " << data.totalKcal << std::endl;
     std::cout << std::left << std::setw(labelWidth) << "  - 总消耗 (千焦): " << data.totalKj << std::endl;
+
+    // --- 新增：食物等效换算 ---
+    std::cout << "\n[ 食物等效 ]" << std::endl;
+    std::cout << "  本次消耗的热量，大约相当于：" << std::endl;
+    for (const auto& food : foodCalorieData) {
+        if (food.kcalPer100g > 0) {
+            double equivalentGrams = data.totalKcal / (food.kcalPer100g / 100.0);
+            std::cout << "  - " << equivalentGrams << " 克" << food.name << std::endl;
+        }
+    }
+    // --- 新增结束 ---
 
     std::cout << "\n[ 等效活动 ]" << std::endl;
     std::cout << "  本次" << activityName << "从热量消耗来看，" << std::endl;
