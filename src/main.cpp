@@ -1,4 +1,3 @@
-#include "common/pch.h"
 
 #include "app/Application.h"
 

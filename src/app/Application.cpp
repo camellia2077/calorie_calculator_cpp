@@ -1,4 +1,4 @@
-#include "common/pch.h"
+
 #include "app/Application.h"
 #include "data/running_data.h"
 #include "data/cycling_data.h"

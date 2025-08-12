@@ -1,10 +1,10 @@
-#include "ConsoleUI.h"
+
+#include "ui/ConsoleUI.h"
 #include <iostream>
 #include <iomanip>
 #include <limits>
 #include <vector>
-// #include <algorithm>      <-- 不再需要
-// #include "data/food_data.h" <-- 不再需要
+
 
 // 用户界面的实现文件，包含了所有的 cout 和 cin
 

@@ -1,6 +1,6 @@
 #ifndef PCH_H
 #define PCH_H
-
+#pragma once // 保证头文件只被编译一次
 // --- C++ 标准库 ---
 #include <iostream>
 #include <string>
