@@ -1,3 +1,4 @@
+#include "common/pch.h"
 #include "FoodConverter.h"
 #include "data/food_data.h" // 引用食物数据
 #include <algorithm>

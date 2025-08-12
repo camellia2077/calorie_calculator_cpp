@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 #include "domain/FoodEquivalent.h"
-#include "WorkoutDomain.h"
+#include "domain/WorkoutDomain.h"
 
 class FoodConverter {
 public:

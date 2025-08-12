@@ -1,3 +1,5 @@
+#include "common/pch.h"
+
 #include "app/Application.h"
 
 // 为 Windows 平台引入头文件
