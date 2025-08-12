@@ -2,12 +2,29 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
+#include <limits> // Used for input validation
 
-// 构造函数的实现
+// --- A helper function for safe numeric input ---
+// This is best kept as a free-standing template function.
+template<typename T>
+void getNumericInput(T& value, const std::string& prompt) {
+    std::cout << prompt;
+    while (!(std::cin >> value)) {
+        std::cout << "输入无效，请输入一个合法的数字: ";
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
+}
+
+// =================================================================
+// WorkoutCalculator Class Member Function Implementations
+// =================================================================
+
+// Constructor: Initializes the calculator with a name and data
 WorkoutCalculator::WorkoutCalculator(const std::string& name, const std::vector<DataPoint>& data)
     : activityName(name), dataTable(data) {}
 
-// 主流程函数的实现
+// Main public method to run the calculator's workflow
 void WorkoutCalculator::run() {
     getUserInput();
     if (calculateResults()) {
@@ -15,34 +32,30 @@ void WorkoutCalculator::run() {
     }
 }
 
-// 获取用户输入的实现
+// Gets all necessary input from the user
 void WorkoutCalculator::getUserInput() {
-    std::cout << "请输入您的" << activityName << "时间（小时部分）: ";
-    std::cin >> currentWorkout.timeHr;
-    std::cout << "请输入您的" << activityName << "时间（分钟部分）: ";
-    std::cin >> currentWorkout.timeMin;
-    std::cout << "请输入您的" << activityName << "时间（秒的部分）: ";
-    std::cin >> currentWorkout.timeSec;
-
-    std::cout << "请输入您的" << activityName << "距离（公里）: ";
-    std::cin >> currentWorkout.distanceKm;
-
-    std::cout << "请输入您的体重（公斤）: ";
-    std::cin >> currentWorkout.weightKg;
+    getNumericInput(currentWorkout.timeHr, "请输入您的" + activityName + "时间（小时部分）: ");
+    getNumericInput(currentWorkout.timeMin, "请输入您的" + activityName + "时间（分钟部分）: ");
+    getNumericInput(currentWorkout.timeSec, "请输入您的" + activityName + "时间（秒的部分）: ");
+    getNumericInput(currentWorkout.distanceKm, "请输入您的" + activityName + "距离（公里）: ");
+    getNumericInput(currentWorkout.weightKg, "请输入您的体重（公斤）: ");
 }
 
-// 执行计算的实现
+// Performs all calculations and validations
 bool WorkoutCalculator::calculateResults() {
-    auto& data = currentWorkout; // 使用别名简化代码
+    auto& data = currentWorkout; // Use an alias for cleaner code
 
+    // Validate the numerical ranges of the input
     if (data.timeHr < 0 || data.timeMin < 0 || data.timeMin >= 60 || data.timeSec < 0 || data.timeSec >= 60 || data.distanceKm <= 0 || data.weightKg <= 0) {
-        std::cerr << "错误：输入值不合法。" << std::endl;
+        std::cerr << "错误：输入值不合法。时间不能为负，分钟和秒数需小于60，距离和体重必须为正数。" << std::endl;
         return false;
     }
 
+    // Perform calculations and store results in the 'currentWorkout' member
     data.totalTimeInMinutes = (data.timeHr * 60.0) + data.timeMin + (data.timeSec / 60.0);
     data.userSpeedKmh = (data.totalTimeInMinutes > 0) ? (data.distanceKm / (data.totalTimeInMinutes / 60.0)) : 0;
     
+    // Check if the calculated speed is within the range of our data table
     if (data.userSpeedKmh < dataTable.front().speedKph || data.userSpeedKmh > dataTable.back().speedKph) {
         std::cout << "\n----------------------------------------" << std::endl;
         std::cout << "您的平均速度是: " << data.userSpeedKmh << " 公里/小时 (km/h)" << std::endl;
@@ -69,24 +82,31 @@ bool WorkoutCalculator::calculateResults() {
     return true;
 }
 
-// 显示结果的实现
+// Displays the final formatted report to the user
 void WorkoutCalculator::displayResults() {
-    const auto& data = currentWorkout; // 使用 const 别名
+    const auto& data = currentWorkout; // Use a const alias for read-only access
+    const int labelWidth = 28; 
 
-    std::cout << "\n----------------------------------------" << std::endl;
-    std::cout << "您的平均速度是: " << data.userSpeedKmh << " 公里/小时 (km/h)" << std::endl;
-    std::cout << "               " << "(" << data.speedMps << " 米/秒 (m/s))" << std::endl;
-    std::cout << "您的平均配速是: " << data.paceMinutes << "分" << data.paceSeconds << "秒 / 公里" << std::endl;
-    std::cout << "\n计算结果:" << std::endl;
-    std::cout << "本次" << activityName << "平均代谢当量 (METs): " << data.averageMets << std::endl;
-    std::cout << "您消耗的总热量约为: " << data.totalKj << " 千焦 (kJ)" << std::endl;
-    std::cout << "                  " << "或 " << data.totalKcal << " 千卡/大卡 (kcal)" << std::endl;
-    std::cout << "\n从消耗热量来看，本次" << activityName << "相当于静坐了：" << std::endl;
-    std::cout << data.equivalentHours << " 小时 " << data.equivalentMinutes << " 分钟" << std::endl;
-    std::cout << "----------------------------------------" << std::endl;
+    std::cout << "========================================" << std::endl;
+
+    std::cout << "\n[ 运动表现 ]" << std::endl;
+    std::cout << std::left << std::setw(labelWidth) << "  - 平均速度 (km/h): " << data.userSpeedKmh << std::endl;
+    std::cout << std::left << std::setw(labelWidth) << "  - 平均速度 (m/s): " << data.speedMps << std::endl;
+    std::cout << "  - 平均配速: " << data.paceMinutes << "分" << data.paceSeconds << "秒 / 公里" << std::endl;
+
+    std::cout << "\n[ 热量消耗 ]" << std::endl;
+    std::cout << std::left << std::setw(labelWidth) << "  - 平均代谢当量 (METs): " << data.averageMets << std::endl;
+    std::cout << std::left << std::setw(labelWidth) << "  - 总消耗 (千卡/大卡): " << data.totalKcal << std::endl;
+    std::cout << std::left << std::setw(labelWidth) << "  - 总消耗 (千焦): " << data.totalKj << std::endl;
+
+    std::cout << "\n[ 等效活动 ]" << std::endl;
+    std::cout << "  本次" << activityName << "从热量消耗来看，" << std::endl;
+    std::cout << "  相当于静坐了：" << data.equivalentHours << " 小时 " << data.equivalentMinutes << " 分钟" << std::endl;
+
+    std::cout << "========================================" << std::endl;
 }
 
-// 插值计算的实现
+// Interpolates the MET value based on user speed
 double WorkoutCalculator::getInterpolatedValue(double userSpeed) {
     if (userSpeed >= dataTable.back().speedKph) return dataTable.back().metValue;
     if (userSpeed <= dataTable.front().speedKph) return dataTable.front().metValue;
@@ -100,5 +120,5 @@ double WorkoutCalculator::getInterpolatedValue(double userSpeed) {
             return y1 + (userSpeed - x1) * (y2 - y1) / (x2 - x1);
         }
     }
-    return 0.0; // 理论上不会到达这里
+    return 0.0; // Should not be reached if speed is within bounds
 }

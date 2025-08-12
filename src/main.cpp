@@ -21,14 +21,12 @@ int main() {
     std::cout << "1. 跑步" << std::endl;
     std::cout << "2. 骑行" << std::endl;
     std::cout << "请输入选项 (1 或 2): ";
-    std::cin >> choice;
-
-    // 输入验证
-    while (std::cin.fail() || (choice != 1 && choice != 2)) {
+    
+    // --- 修改：使用更健壮的输入循环 ---
+    while (!(std::cin >> choice) || (choice != 1 && choice != 2)) {
         std::cout << "输入无效，请输入 1 或 2: ";
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cin >> choice;
     }
     
     // 根据用户选择创建不同的计算器实例
