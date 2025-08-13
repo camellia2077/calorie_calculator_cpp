@@ -14,10 +14,13 @@ public:
 private:
     ConsoleUI ui;
     CalculationEngine engine;
-    FoodConverter foodConverter; // It's better to make this a member variable
+    FoodConverter foodConverter;
 
     // 私有辅助函数，用于验证输入参数的合法性
     bool validateParameters(const WorkoutParameters& params);
+
+    // 新增：私有辅助函数，用于处理单次运动计算流程
+    void processWorkout(int sportChoice); 
 };
 
 #endif // APPLICATION_H

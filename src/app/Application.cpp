@@ -1,33 +1,53 @@
 #include "app/Application.h"
+#include "common/version.h" // Corrected path
 #include "data/running_data.h"
 #include "data/cycling_data.h"
 #include <string>
 #include <vector>
 
 void Application::run() {
-    int choice = ui.getSportChoice();
-    
+    while (true) {
+        int choice = ui.getSportChoice(); 
+
+        switch (choice) {
+            case 0: {
+                ui.displayVersionInfo(AppVersion::getVersionString(), AppVersion::LAST_UPDATED);
+                break;
+            }
+            case 1: // 跑步
+            case 2: // 骑行
+                processWorkout(choice);
+                break;
+            case 3: // 假设选项3为退出
+                ui.displayGoodbyeMessage();
+                return; // 结束 run() 函数，退出程序
+            default:
+                ui.displayError("无效的选项，请重新输入。"); 
+                break;
+        }
+    }
+}
+
+// ... the rest of the file remains the same ...
+void Application::processWorkout(int sportChoice) {
     // 根据选择确定运动名称和数据表
-    std::string activityName = (choice == 1) ? "跑步" : "骑行";
-    const auto& dataTable = (choice == 1) ? runningData : cyclingData;
+    std::string activityName = (sportChoice == 1) ? "跑步" : "骑行";
+    const auto& dataTable = (sportChoice == 1) ? runningData : cyclingData;
 
     // 获取用户输入
     WorkoutParameters params = ui.getWorkoutParameters(activityName);
 
-    // 1. 验证输入的合法性 (例如非负数等)
+    // 1. 验证输入的合法性
     if (!validateParameters(params)) {
         ui.displayError("输入值不合法。时间不能为负，分钟和秒数需小于60，距离和体重必须为正数。");
         return;
     }
 
-    // 2. (*** 这是主要修改点 ***)
-    //    现在直接将原始参数传递给计算引擎，不再进行任何预计算。
-    //    由 CalculationEngine 内部的 PaceCalculator 来计算速度。
+    // 2. 将参数传递给计算引擎
     WorkoutResults results = engine.calculate(params, dataTable);
     
     // 3. 验证速度是否在计算范围内
-    //    我们从引擎返回的结果中获取速度来进行验证。
-    if (results.userSpeedKmh < dataTable.front().speedKph || results.userSpeedKmh > dataTable.back().speedKph) {
+    if (!dataTable.empty() && (results.userSpeedKmh < dataTable.front().speedKph || results.userSpeedKmh > dataTable.back().speedKph)) {
         ui.displaySpeedError(results.userSpeedKmh, dataTable.front().speedKph, dataTable.back().speedKph);
         return;
     }
