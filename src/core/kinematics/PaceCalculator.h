@@ -1,10 +1,9 @@
 #ifndef PACE_CALCULATOR_H
 #define PACE_CALCULATOR_H
 
-#include "domain/WorkoutDomain.h" // 依赖于WorkoutParameters
+#include "domain/WorkoutDomain.h"
 
-// 这个类负责计算所有基础的运动表现指标
-// 定义一个专门用于存储配速相关计算结果的结构体
+// 结果结构体保持不变，因为它定义了对外的“数据合约”
 struct PaceCalculatorResult {
     double totalTimeInMinutes;
     double userSpeedKmh;
@@ -16,9 +15,9 @@ struct PaceCalculatorResult {
 class PaceCalculator {
 public:
     /**
-     * @brief 计算所有基础运动表现指标。
-     * @param params 包含用户原始输入的结构体。
-     * @return PaceCalculatorResult 包含所有计算好的配速相关结果。
+     * @brief 接收用户输入，内部使用国际单位制进行核心计算，并返回一个包含多种单位的结果。
+     * @param params 包含用户原始输入的结构体 (km, h, min, s)。
+     * @return PaceCalculatorResult 包含所有计算好的运动表现指标。
      */
     PaceCalculatorResult calculate(const WorkoutParameters& params) const;
 };
