@@ -38,7 +38,13 @@ struct PaceCalculatorResult {
 
 class PaceCalculator {
 public:
+    // The public interface remains the same
     PaceCalculatorResult calculate(const WorkoutParameters& params) const;
+
+private:
+    // Private helper functions to encapsulate logic
+    double calculateTotalSeconds(const WorkoutParameters& params) const;
+    void calculatePaceComponents(double totalSeconds, double distanceKm, int& outPaceMinutes, double& outPaceSeconds) const;
 };
 
 #endif // PACE_CALCULATOR_H

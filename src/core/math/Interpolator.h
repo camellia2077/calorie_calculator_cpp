@@ -2,7 +2,7 @@
 #define INTERPOLATOR_H
 
 #include <vector>
-#include "domain/DataPoint.h" // 依赖于数据点结构
+#include "domain/DataPoint.h" // 存储一对数据：speedKph (速度，单位是千米/小时) 和 metValue (METs值)
 
 // 这是一个可复用的工具，负责执行线性插值计算
 
