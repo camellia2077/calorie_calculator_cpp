@@ -1,4 +1,3 @@
-
 #include "app/Application.h"
 #include "data/running_data.h"
 #include "data/cycling_data.h"
@@ -15,29 +14,28 @@ void Application::run() {
     // 获取用户输入
     WorkoutParameters params = ui.getWorkoutParameters(activityName);
 
-    // 验证输入的合法性
+    // 1. 验证输入的合法性 (例如非负数等)
     if (!validateParameters(params)) {
         ui.displayError("输入值不合法。时间不能为负，分钟和秒数需小于60，距离和体重必须为正数。");
         return;
     }
 
-    // 在传递给引擎之前，先进行初步计算和验证
-    double totalTimeInMinutes = (params.timeHr * 60.0) + params.timeMin + (params.timeSec / 60.0);
-    double userSpeedKmh = (totalTimeInMinutes > 0) ? (params.distanceKm / (totalTimeInMinutes / 60.0)) : 0;
+    // 2. (*** 这是主要修改点 ***)
+    //    现在直接将原始参数传递给计算引擎，不再进行任何预计算。
+    //    由 CalculationEngine 内部的 PaceCalculator 来计算速度。
+    WorkoutResults results = engine.calculate(params, dataTable);
     
-    // 验证速度是否在计算范围内
-    if (userSpeedKmh < dataTable.front().speedKph || userSpeedKmh > dataTable.back().speedKph) {
-        ui.displaySpeedError(userSpeedKmh, dataTable.front().speedKph, dataTable.back().speedKph);
+    // 3. 验证速度是否在计算范围内
+    //    我们从引擎返回的结果中获取速度来进行验证。
+    if (results.userSpeedKmh < dataTable.front().speedKph || results.userSpeedKmh > dataTable.back().speedKph) {
+        ui.displaySpeedError(results.userSpeedKmh, dataTable.front().speedKph, dataTable.back().speedKph);
         return;
     }
 
-    // 调用计算引擎进行核心计算
-    WorkoutResults results = engine.calculate(params, dataTable);
-
-    // 调用食物转换器
+    // 4. 调用食物转换器
     auto foodEquivalents = foodConverter.calculate(results.totalKcal);
 
-    // 将所有结果传递给UI进行显示 (***这是唯一的、正确的调用***)
+    // 5. 将所有结果传递给UI进行显示
     ui.displayResults(results, activityName, foodEquivalents);
 }
 

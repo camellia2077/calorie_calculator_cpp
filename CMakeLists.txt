@@ -36,7 +36,7 @@ target_precompile_headers(calorie_calculator
         # 将 pch.h 指定为预编译头文件
         # PRIVATE 表示它只为 calorie_calculator 目标本身预编译
     # 而不是让链接到它的其他库也使用这个PCH
-        <common/pch.h> # <--- FIX: Update the path here
+        <common/pch.h> 
 )
 
 # 7. 添加编译和链接选项
