@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.16)
 # 2. 定义项目名称和所用语言
 project(WorkoutCalculator LANGUAGES CXX)
 
+
 # 3. 设置C++标准
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

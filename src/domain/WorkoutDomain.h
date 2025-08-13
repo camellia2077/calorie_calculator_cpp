@@ -1,25 +1,25 @@
 #ifndef WORKOUT_DOMAIN_H
 #define WORKOUT_DOMAIN_H
 
-// 这个文件定义了多个类之间共享的数据结构
+// This file defines data structures shared between multiple classes.
 
-// 用于存储用户输入的原始数据
+// Stores the original user input
 struct WorkoutParameters {
     double timeHr, timeMin, timeSec;
     double distanceKm;
     double weightKg;
 };
 
-// (*** 这是主要修改点 ***)
-// 一个统一的、包含所有计算结果的结构体，供最终使用
+// A unified structure containing all final calculation results
 struct WorkoutResults {
-    // --- PaceCalculator 的结果 ---
+    // --- Results from PaceCalculator ---
     double totalTimeInMinutes;
     double userSpeedKmh;
     double speedMps;
     int paceMinutes;
-    int paceSeconds;
-    // --- MetCalorieCalculator 的结果 ---
+    double paceSeconds; // <--- The Fix: Change this from int to double
+
+    // --- Results from MetCalorieCalculator ---
     double averageMets;
     double totalKcal;
     double totalKj;
