@@ -11,7 +11,7 @@ MetCalorieResult MetCalorieCalculator::calculate(double userSpeedKmh, double wei
     // 2. 计算热量消耗 (千卡和千焦)
     const double totalTimeInHours = totalTimeInMinutes / 60.0;
     results.totalKcal = results.averageMets * weightKg * totalTimeInHours;
-    
+    // 转换千卡为千焦 (1 千卡 = 4.184 千焦)
     const double KJ_PER_KCAL = 4.184;
     results.totalKj = results.totalKcal * KJ_PER_KCAL;
     
