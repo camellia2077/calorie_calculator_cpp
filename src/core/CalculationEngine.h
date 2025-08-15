@@ -4,8 +4,8 @@
 #include <vector>
 #include "domain/DataPoint.h"
 #include "domain/WorkoutDomain.h" 
-#include "core/kinematics/PaceCalculator.h"        // <--- 关键：引用子计算器的头文件
-#include "core/physiology/MetCalorieCalculator.h"  // <--- 关键：引用子计算器的头文件
+#include "core/kinematics/PaceCalculator.h"        // 计算配速
+#include "core/physiology/MetCalorieCalculator.h"  // 计算代谢当量
 
 /**
  * @brief 一个统一的计算引擎门面类。
