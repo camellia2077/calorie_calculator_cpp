@@ -6,14 +6,11 @@
 // 这个类负责所有与生理相关的计算，它会使用 Interpolator 工具
 // 定义一个专门用于存储生理相关计算结果的结构体
 struct MetCalorieResult {
-    // 平均代谢当量 (METs) 由 Interpolator 工具计算得出
-    double averageMets;
-    double totalKcal;
-    double totalKj;
-    // 等效静坐活动时间
-    int equivalentHours;
-    // 等效静坐活动时间的分钟部分
-    int equivalentMinutes;
+    double averageMets; // 平均代谢当量 (METs)
+    double totalKcal; // 总热量消耗 (千卡/大卡)
+    double totalKj; // 总热量消耗 (千焦)
+    int equivalentHours; // 运动等效静坐活动的小时部分
+    int equivalentMinutes; // 等效静坐活动时间的分钟部分
 };
 
 class MetCalorieCalculator {

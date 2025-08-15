@@ -42,10 +42,10 @@ private:
     );
 
     /**
-     * @brief 对一个食物等效列表按热量（kcalPer100）进行升序排序。
+     * @brief 对一个食物等效列表按分量（amount）进行降序排序。
      * @param equivalents 需要排序的食物等效向量的引用。
      */
-    void sortEquivalentsByKcal(std::vector<FoodEquivalent>& equivalents);
+    void sortEquivalentsByAmount(std::vector<FoodEquivalent>& equivalents);
 };
 
 #endif // FOOD_CONVERTER_H

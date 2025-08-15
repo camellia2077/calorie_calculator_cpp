@@ -28,7 +28,6 @@ void Application::run() {
     }
 }
 
-// ... the rest of the file remains the same ...
 void Application::processWorkout(int sportChoice) {
     // 根据选择确定运动名称和数据表
     std::string activityName = (sportChoice == 1) ? "跑步" : "骑行";

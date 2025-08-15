@@ -58,21 +58,22 @@ void FoodConverter::processCategory(
         }
     }
 
-    // 调用独立的排序函数，对当前类别的结果按热量进行排序。
-    sortEquivalentsByKcal(categoryEquivalents);
+    // 调用独立的排序函数，对当前类别的结果按分量进行降序排序。
+    sortEquivalentsByAmount(categoryEquivalents);
 
     // 将处理完成的当前类别食物列表（categoryEquivalents）存入最终的map中。
     allEquivalents[categoryName] = categoryEquivalents;
 }
 
 /**
- * @brief [私有] 按热量对列表进行排序。
+ * @brief [私有] 按分量对列表进行降序排序。
  * * 使用 C++ 标准库的 std::sort 算法。
- * 排序规则是基于食物的 kcalPer100 字段，进行升序排列（热量低的在前）。
+ * 排序规则是基于食物的 amount 字段，进行降序排列（分量多的在前）。
  */
-void FoodConverter::sortEquivalentsByKcal(std::vector<FoodEquivalent>& equivalents) {
-    // 使用 lambda 表达式定义排序规则：比较两个 FoodEquivalent 对象的 kcalPer100 属性。
+void FoodConverter::sortEquivalentsByAmount(std::vector<FoodEquivalent>& equivalents) {
+    // 使用 lambda 表达式定义排序规则：比较两个 FoodEquivalent 对象的 amount 属性。
+    // a.amount > b.amount 表示按降序排序。
     std::sort(equivalents.begin(), equivalents.end(), [](const FoodEquivalent& a, const FoodEquivalent& b) {
-        return a.kcalPer100 < b.kcalPer100;
+        return a.amount > b.amount;
     });
 }

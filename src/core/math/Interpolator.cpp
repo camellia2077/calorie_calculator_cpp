@@ -2,7 +2,6 @@
 #include <algorithm> // 包含 std::lower_bound
 #include <iterator>  // 包含 std::distance
 
-// 不再需要手写二分查找的匿名命名空间
 // 传入速度，传出对应的 METs 值
 double Interpolator::getInterpolatedValue(double userSpeed, const std::vector<DataPoint>& dataTable) {
     // 1. 处理边界情况 (保持不变)
