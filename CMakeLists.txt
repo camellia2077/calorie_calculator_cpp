@@ -29,7 +29,8 @@ add_library(workout_lib STATIC
     src/core/kinematics/PaceCalculator.cpp
     src/core/physiology/MetCalorieCalculator.cpp
     src/core/math/Interpolator.cpp
-    src/ui/ConsoleUI.cpp
+
+    src/ui/OutputFormat.cpp
 )
 
 # 5. 将通用配置应用到核心库上

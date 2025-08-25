@@ -5,42 +5,6 @@
 #include <string>
 #include <vector>
 
-// 交互式主循环
-void Application::run() {
-    while (true) {
-        int choice = ui.getSportChoice();
-
-        switch (choice) {
-            case 0: {
-                ui.displayVersionInfo(AppVersion::getVersionString(), AppVersion::LAST_UPDATED);
-                break;
-            }
-            case 1: // 跑步
-            case 2: // 骑行
-                processWorkout(choice);
-                break;
-            case 3: // 退出
-                ui.displayGoodbyeMessage();
-                return;
-            default:
-                ui.displayError("无效的选项，请重新输入。");
-                break;
-        }
-    }
-}
-
-// 从UI获取参数并启动单次处理
-void Application::processWorkout(int sportChoice) {
-    std::string sportType = (sportChoice == 1) ? "run" : "bike";
-    std::string activityName = (sportChoice == 1) ? "跑步" : "骑行";
-    
-    // 获取用户输入
-    WorkoutParameters params = ui.getWorkoutParameters(activityName);
-
-    // 调用新的核心处理函数
-    runOnce(sportType, params);
-}
-
 // 新的核心业务流程，可被外部直接调用
 void Application::runOnce(const std::string& sportType, const WorkoutParameters& params) {
     // 1. 根据运动类型选择数据表和名称
