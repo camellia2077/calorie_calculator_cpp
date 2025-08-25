@@ -67,7 +67,8 @@ int main() {
         SetConsoleCP(CP_UTF8);
     #endif
 
-    Application app;
+    // 使用新的构造函数实例化 Application 对象，并传入食物数据路径
+    Application app("food_data.json");
     OutputFormat ui; // 创建一个UI实例用于显示
 
     // 从 Application::run() 移动过来的主循环

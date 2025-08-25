@@ -1,13 +1,16 @@
 #include "FoodConverter.h"
-#include "data/food_data.h" // 引用食物数据
 #include <algorithm>
 
-std::map<std::string, std::vector<FoodEquivalent>> FoodConverter::calculate(double totalKcal) {
+// 修改后的 calculate 方法
+std::map<std::string, std::vector<FoodEquivalent>> FoodConverter::calculate(
+    double totalKcal, 
+    const std::vector<FoodCategoryData>& allFoodData) { // 接收食物数据作为参数
+    
     std::map<std::string, std::vector<FoodEquivalent>> allEquivalents;
 
-    // 遍历统一的食物数据源
+    // 遍历从外部传入的食物数据源
     for (const auto& category : allFoodData) {
-        // 调用已更新的 processCategory 函数，不再传递单位
+        // 调用私有辅助函数来处理每个类别，这部分逻辑保持不变
         processCategory(
             totalKcal,
             category.categoryName,
@@ -19,6 +22,7 @@ std::map<std::string, std::vector<FoodEquivalent>> FoodConverter::calculate(doub
     return allEquivalents;
 }
 
+// processCategory 函数保持不变，它的逻辑已经是通用的
 void FoodConverter::processCategory(
     double totalKcal,
     const std::string& categoryName,
@@ -29,23 +33,23 @@ void FoodConverter::processCategory(
 
     for (const auto& food : foods) {
         if (food.kcalPer100 > 0) {
-            // ==================== 修改核心 ====================
-            // 1. 根据食物类型决定单位
+            // 根据食物类型（固体/液体）决定单位是“克”还是“毫升”
             std::string unit = (food.type == FoodType::Solid) ? "克" : "毫升";
             
-            // 2. 计算等效数量
+            // 计算等效的数量
             double equivalentAmount = totalKcal / (food.kcalPer100 / 100.0);
 
-            // 3. 将包含正确单位的结果存入列表
+            // 将计算结果存入列表
             categoryEquivalents.push_back({food.name, equivalentAmount, unit, food.kcalPer100});
-            // ===============================================
         }
     }
 
+    // 对当前类别的食物按数量进行排序
     sortEquivalentsByAmount(categoryEquivalents);
     allEquivalents[categoryName] = categoryEquivalents;
 }
 
+// sortEquivalentsByAmount 函数保持不变
 void FoodConverter::sortEquivalentsByAmount(std::vector<FoodEquivalent>& equivalents) {
     std::sort(equivalents.begin(), equivalents.end(), [](const FoodEquivalent& a, const FoodEquivalent& b) {
         return a.amount > b.amount;

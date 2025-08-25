@@ -57,6 +57,9 @@ int main(int argc, char* argv[]) {
         return 1; // 返回错误码
     }
 
+    // 使用新的构造函数实例化 Application 对象，并传入食物数据路径
+    Application app("food_data.json");
+
     try {
         // 2. 解析命令行参数
         std::string sportTypeInput = argv[1];
@@ -80,7 +83,6 @@ int main(int argc, char* argv[]) {
         params.weightKg = std::stod(argv[6]);
 
         // 3. 创建 Application 实例并调用核心逻辑
-        Application app;
         app.runOnce(sportType, params);
 
     } catch (const std::invalid_argument& e) {

@@ -24,8 +24,11 @@ endif()
 # 4. 创建一个核心静态库，并显式列出所有共享源文件
 add_library(workout_lib STATIC
     src/app/Application.cpp
+    
     src/core/CalculationEngine.cpp
     src/core/FoodConverter.cpp
+    src/core/FoodDataManager.cpp
+
     src/core/kinematics/PaceCalculator.cpp
     src/core/physiology/MetCalorieCalculator.cpp
     src/core/math/Interpolator.cpp

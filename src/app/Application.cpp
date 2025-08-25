@@ -5,6 +5,10 @@
 #include <string>
 #include <vector>
 
+// 实现新的构造函数
+Application::Application(const std::string& foodDataPath)
+    : foodDataManager_(foodDataPath) {}
+
 // 新的核心业务流程，可被外部直接调用
 void Application::runOnce(const std::string& sportType, const WorkoutParameters& params) {
     // 1. 根据运动类型选择数据表和名称
@@ -37,8 +41,11 @@ void Application::runOnce(const std::string& sportType, const WorkoutParameters&
         return;
     }
 
-    // 5. 调用食物转换器
-    auto foodEquivalents = foodConverter.calculate(results.totalKcal);
+    // 5. 调用食物转换器 (现在需要传递食物数据)
+    auto foodEquivalents = foodConverter.calculate(
+        results.totalKcal,
+        foodDataManager_.getFoodData() // 从FoodDataManager获取数据
+    );
 
     // 6. 将所有结果传递给UI进行显示
     ui.displayResults(results, activityName, foodEquivalents);
