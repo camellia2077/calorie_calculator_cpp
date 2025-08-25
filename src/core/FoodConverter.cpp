@@ -5,19 +5,16 @@
 std::map<std::string, std::vector<FoodEquivalent>> FoodConverter::calculate(double totalKcal) {
     std::map<std::string, std::vector<FoodEquivalent>> allEquivalents;
 
-    // ==================== 修改开始：逻辑大大简化 ====================
     // 遍历统一的食物数据源
     for (const auto& category : allFoodData) {
-        // 直接从 category 对象中获取所有需要的信息
+        // 调用已更新的 processCategory 函数，不再传递单位
         processCategory(
             totalKcal,
             category.categoryName,
             category.items,
-            category.unit,
             allEquivalents
         );
     }
-    // ==================== 修改结束 ====================
 
     return allEquivalents;
 }
@@ -26,15 +23,22 @@ void FoodConverter::processCategory(
     double totalKcal,
     const std::string& categoryName,
     const std::vector<FoodData>& foods,
-    const std::string& unit,
     std::map<std::string, std::vector<FoodEquivalent>>& allEquivalents) {
     
     std::vector<FoodEquivalent> categoryEquivalents;
 
     for (const auto& food : foods) {
-        if (food.kcalPer100g > 0) {
-            double equivalentAmount = totalKcal / (food.kcalPer100g / 100.0);
-            categoryEquivalents.push_back({food.name, equivalentAmount, unit, food.kcalPer100g});
+        if (food.kcalPer100 > 0) {
+            // ==================== 修改核心 ====================
+            // 1. 根据食物类型决定单位
+            std::string unit = (food.type == FoodType::Solid) ? "克" : "毫升";
+            
+            // 2. 计算等效数量
+            double equivalentAmount = totalKcal / (food.kcalPer100 / 100.0);
+
+            // 3. 将包含正确单位的结果存入列表
+            categoryEquivalents.push_back({food.name, equivalentAmount, unit, food.kcalPer100});
+            // ===============================================
         }
     }
 
