@@ -14,10 +14,10 @@ constexpr int MAJOR_VERSION = 0;
 constexpr int MINOR_VERSION = 1;
 
 // 修订号：对应小规模的错误修复或优化
-constexpr int PATCH_VERSION = 1;
+constexpr int PATCH_VERSION = 2;
 
 // 最后更新日期
-const std::string LAST_UPDATED = "2025-08-15";
+const std::string LAST_UPDATED = "2025-08-25";
 
 // 将版本号格式化为字符串，例如 "1.0.0"
 inline std::string getVersionString() {
