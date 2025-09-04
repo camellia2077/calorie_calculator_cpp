@@ -1,0 +1,8 @@
+{
+  "display_options": {
+    "show_workout_performance": true,
+    "show_calorie_consumption": true,
+    "show_food_equivalents": true,
+    "show_equivalent_activity": true
+  }
+}

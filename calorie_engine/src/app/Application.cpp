@@ -5,12 +5,14 @@
 #include <string>
 #include <vector>
 
-// 实现新的构造函数
-Application::Application(const std::string& foodDataPath)
-    : foodDataManager_(foodDataPath) {}
+// 修改构造函数以初始化两个管理器
+Application::Application(const std::string& foodDataPath, const std::string& outputConfigPath)
+    : foodDataManager_(foodDataPath), outputConfigManager_(outputConfigPath) {}
 
 // 新的核心业务流程，可被外部直接调用
 void Application::runOnce(const std::string& sportType, const WorkoutParameters& params) {
+    // ... (代码前部分保持不变)
+
     // 1. 根据运动类型选择数据表和名称
     std::string activityName;
     const std::vector<DataPoint>* dataTable = nullptr;
@@ -41,14 +43,17 @@ void Application::runOnce(const std::string& sportType, const WorkoutParameters&
         return;
     }
 
-    // 5. 调用食物转换器 (现在需要传递食物数据)
+    // 5. 调用食物转换器
     auto foodEquivalents = foodConverter.calculate(
         results.totalKcal,
-        foodDataManager_.getFoodData() // 从FoodDataManager获取数据
+        foodDataManager_.getFoodData()
     );
 
-    // 6. 将所有结果传递给UI进行显示
-    ui.displayResults(results, activityName, foodEquivalents);
+    // 6. 获取输出配置
+    const auto& outputConfig = outputConfigManager_.getOutputConfig();
+
+    // 7. 将所有结果和配置传递给UI进行显示
+    ui.displayResults(results, activityName, foodEquivalents, outputConfig);
 }
 
 bool Application::validateParameters(const WorkoutParameters& params) {

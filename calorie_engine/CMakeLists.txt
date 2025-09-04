@@ -28,6 +28,7 @@ add_library(workout_lib STATIC
     src/core/CalculationEngine.cpp
     src/core/FoodConverter.cpp
     src/core/FoodDataManager.cpp
+    src/core/OutputConfigManager.cpp
 
     src/core/kinematics/PaceCalculator.cpp
     src/core/physiology/MetCalorieCalculator.cpp

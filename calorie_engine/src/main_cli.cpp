@@ -57,8 +57,8 @@ int main(int argc, char* argv[]) {
         return 1; // 返回错误码
     }
 
-    // 使用新的构造函数实例化 Application 对象，并传入食物数据路径
-    Application app("food_data.json");
+    // 使用新的构造函数实例化 Application 对象，并传入食物和输出配置文件路径
+    Application app("food_data.json", "output_config.json");
 
     try {
         // 2. 解析命令行参数
@@ -85,12 +85,8 @@ int main(int argc, char* argv[]) {
         // 3. 创建 Application 实例并调用核心逻辑
         app.runOnce(sportType, params);
 
-    } catch (const std::invalid_argument& e) {
-        std::cerr << "Error: Invalid number format in arguments. Please provide valid numbers." << std::endl;
-        printUsage(argv[0]);
-        return 1;
-    } catch (const std::out_of_range& e) {
-        std::cerr << "Error: A numeric argument is out of range." << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
         printUsage(argv[0]);
         return 1;
     }
