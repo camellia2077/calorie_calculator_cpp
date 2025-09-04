@@ -93,8 +93,11 @@ class GraphParser:
                 writer.writerow([f"{time_sec:.2f}", f"{val:.2f}"])
         print(f"数据已成功保存到 {filename}")
 
-    def plot_results(self, data_points: list, title: str, xlabel: str, ylabel: str, save_path=None, color='r'):
-        """一个可以绘制任何 (x, y) 数据点列表的通用绘图函数。"""
+    def plot_results(self, data_points: list, title: str, xlabel: str, ylabel: str, save_path=None, color='r', plot_style='line'):
+        """
+        一个可以绘制任何 (x, y) 数据点列表的通用绘图函数。
+        支持 'line' (线图) 或 'scatter' (散点图) 样式。
+        """
         if not data_points:
             print("警告：没有可供绘图的数据点。")
             return
@@ -103,7 +106,16 @@ class GraphParser:
         val_vals = [p[1] for p in data_points]
         
         plt.figure(figsize=(10, 5))
-        plt.plot(time_vals, val_vals, color=color)
+
+        if plot_style == 'line':
+            plt.plot(time_vals, val_vals, color=color)
+        elif plot_style == 'scatter':
+            # Use smaller dots (s=10) for a cleaner scatter plot
+            plt.scatter(time_vals, val_vals, color=color, s=10, marker='o') 
+        else:
+            print(f"警告：未知的绘图样式 '{plot_style}'。将使用默认线图。")
+            plt.plot(time_vals, val_vals, color=color)
+
         plt.title(title)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)

@@ -3,6 +3,7 @@ import config
 import numpy as np
 from graph_parser import GraphParser, parse_time_to_seconds
 from stats_calculator import calculate_stats
+from slope_analyzer import analyze_and_plot_slope # Import the new function
 
 def main():
     """主执行函数"""
@@ -59,62 +60,30 @@ def main():
     # 计算并打印统计数据
     data_values = [p[1] for p in parser.data_points]
     if data_values:
-        # 使用numpy计算平均值和最大值
         avg_val = np.mean(data_values)
         max_val = np.max(data_values)
-        
-        # 从新模块调用函数计算方差和标准差
         variance, std_dev = calculate_stats(data_values)
 
         print(f"\n--- {target_config['name']} 分析结果 ---")
         print(f"平均值: {avg_val:.2f} {target_config['unit']}")
         print(f"最大值: {max_val:.2f} {target_config['unit']}")
-        
-        # 打印新的统计结果
         if variance is not None:
             print(f"方差: {variance:.2f}")
             print(f"标准差: {std_dev:.2f}")
-
         print("--------------------")
 
-    # 保存原始数据图表
+    # 保存原始数据图表 (will use default 'line' plot style)
     parser.plot_results(
         data_points=parser.data_points,
-        title=f"提取的 {target_config['name']} 数据",
-        xlabel="时间 (秒)",
+        title=f"Extracted {target_config['name']} Data",
+        xlabel="Time (seconds)",
         ylabel=f"{target_config['name']} ({target_config['unit']})",
         save_path=config.PLOT_OUTPUT_FILE
     )
 
-    # --- 5. 计算并绘制斜率 ---
-    print("\n--- 开始计算斜率 ---")
-    slope_data = []
-    if len(parser.data_points) > 1:
-        for i in range(1, len(parser.data_points)):
-            p1 = parser.data_points[i-1]
-            p2 = parser.data_points[i]
-            
-            time_diff = p2[0] - p1[0]
-            value_diff = p2[1] - p1[1]
-            
-            if time_diff > 0:
-                slope = value_diff / time_diff
-                slope_data.append((p2[0], slope)) # 将斜率与第二个点的时间关联
-    
-    if slope_data:
-        print(f"已计算 {len(slope_data)} 个斜率点。")
-        # 绘制斜率数据
-        slope_plot_filename = "slope_plot.png"
-        parser.plot_results(
-            data_points=slope_data,
-            title=f"{target_config['name']} 的斜率",
-            xlabel="时间 (秒)",
-            ylabel=f"斜率 ({target_config['unit']} / 秒)",
-            save_path=slope_plot_filename,
-            color='b' # 为斜率图使用不同的颜色
-        )
-    else:
-        print("数据点不足，无法计算斜率。")
+    # --- 5. 调用独立的斜率分析和绘图模块 ---
+    analyze_and_plot_slope(parser.data_points, target_config, parser)
+
 
 if __name__ == '__main__':
     main()
