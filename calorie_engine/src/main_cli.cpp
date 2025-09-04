@@ -2,39 +2,25 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include <filesystem> // 用于路径拼接
+#include <filesystem>
 
 #include "app/Application.h"
 #include "common/version.h"
-// 确保包含了DbInserterFacade.h，即使这里不直接调用
-// 因为Application.h会用到它
 #include "db_inserter/DbInserterFacade.h"
-
 
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
-// 更新了使用说明
-void printUsage(const char* progName) {
-    std::cerr << "用法: " << progName << " <sport> <hours> <minutes> <seconds> <distance_km> <weight_kg>" << std::endl;
-    std::cerr << "  或: " << progName << " --import <json_file> [--dbpath <directory>]" << std::endl;
-    std::cerr << "  <sport>        : 'run' 或 'r' 代表跑步, 'bike' 或 'b' 代表骑行。" << std::endl;
-    std::cerr << "  <hours>        : 持续时间的小时部分 (例如, 1)。" << std::endl;
-    std::cerr << "  <minutes>      : 持续时间的分钟部分 (例如, 30)。" << std::endl;
-    std::cerr << "  <seconds>      : 持续时间的秒数部分 (例如, 0)。" << std::endl;
-    std::cerr << "  <distance_km>  : 公里数 (例如, 10.5)。" << std::endl;
-    std::cerr << "  <weight_kg>    : 体重公斤数 (例如, 70.0)。" << std::endl;
-    std::cerr << "\n选项:" << std::endl;
-    std::cerr << "  --help, -h     : 显示此帮助信息。" << std::endl;
-    std::cerr << "  --version, -v  : 显示版本信息。" << std::endl;
-    std::cerr << "  --import       : 从一个JSON文件导入单条活动记录。" << std::endl;
-    std::cerr << "  --dbpath       : (可选) 指定数据库文件所在的目录。" << std::endl;
-    std::cerr << "                 :  如果未提供，则默认为程序当前目录。" << std::endl;
-    std::cerr << "\n示例 (计算): " << progName << " r 0 45 30 10.0 75.5" << std::endl;
-    std::cerr << "示例 (导入): " << progName << " --import activity.json" << std::endl;
-    std::cerr << "示例 (导入到指定目录): " << progName << " --import activity.json --dbpath ../data" << std::endl;
-}
+// --- 帮助信息函数 ---
+void printMainUsage(const char* progName);
+void printCalculateUsage(const char* progName);
+void printImportUsage(const char* progName);
+
+// --- 子命令处理函数 ---
+void handleCalculate(const std::vector<std::string>& args, Application& app);
+void handleImport(const std::vector<std::string>& args, Application& app);
+
 
 int main(int argc, char* argv[]) {
     // 环境设置
@@ -45,96 +31,155 @@ int main(int argc, char* argv[]) {
 
     std::vector<std::string> args(argv + 1, argv + argc);
 
-    Application app("food_data.json", "output_config.json");
-
-    // --- 修改后的参数解析逻辑 ---
-    std::string jsonPath;
-    std::string dbDirectory = "."; // 默认数据库目录为当前目录
-    bool importMode = false;
-
-    // 遍历一次参数来查找导入相关的指令
-    for (size_t i = 0; i < args.size(); ++i) {
-        if (args[i] == "--import") {
-            importMode = true;
-            // 确保 --import 后面跟的是文件名而不是另一个选项
-            if (i + 1 < args.size() && args[i + 1].rfind("--", 0) != 0) {
-                jsonPath = args[++i]; // 使用该路径并跳过下一个参数
-            } else {
-                std::cerr << "错误: --import 命令需要一个JSON文件路径。" << std::endl;
-                printUsage(argv[0]);
-                return 1;
-            }
-        } else if (args[i] == "--dbpath") {
-            // 确保 --dbpath 后面跟的是目录名而不是另一个选项
-            if (i + 1 < args.size() && args[i + 1].rfind("--", 0) != 0) {
-                dbDirectory = args[++i]; // 使用该路径并跳过下一个参数
-            } else {
-                std::cerr << "错误: --dbpath 参数需要一个目录路径。" << std::endl;
-                printUsage(argv[0]);
-                return 1;
-            }
-        }
-    }
-
-    // 如果是导入模式，则执行导入并退出
-    if (importMode) {
-        if (jsonPath.empty()) {
-            std::cerr << "错误: 使用了 --import 但未指定JSON文件。" << std::endl;
-            printUsage(argv[0]);
-            return 1;
-        }
-
-        // 使用 C++17 的 filesystem 来安全地拼接路径
-        std::filesystem::path finalDbPath(dbDirectory);
-        finalDbPath /= "activities.sqlite3"; // 硬编码文件名和后缀
-
-        app.importActivityFromJson(jsonPath, finalDbPath.string());
-        return 0; // 导入后退出
-    }
-
-
-    // --- 原有的计算逻辑保持不变 ---
-    if (args.empty() || args[0] == "--help" || args[0] == "-h") {
-        printUsage(argv[0]);
+    if (args.empty() || args[0] == "-h" || args[0] == "--help") {
+        printMainUsage(argv[0]);
         return 0;
     }
-    if (args[0] == "--version" || args[0] == "-v") {
+
+    if (args[0] == "-v" || args[0] == "--version") {
         std::cout << "Version: " << AppVersion::getVersionString() << std::endl;
         std::cout << "Last Updated: " << AppVersion::LAST_UPDATED << std::endl;
         return 0;
     }
 
-    if (argc != 7) {
-        printUsage(argv[0]);
-        return 1;
-    }
+    Application app("food_data.json", "output_config.json");
+    std::string command = args[0];
     
+    // 移除第一个参数（命令本身），方便后续处理
+    std::vector<std::string> command_args(args.begin() + 1, args.end());
+
     try {
-        std::string sportTypeInput = argv[1];
-        std::string sportType;
-        if (sportTypeInput == "run" || sportTypeInput == "r") {
-            sportType = "run";
-        } else if (sportTypeInput == "bike" || sportTypeInput == "b") {
-            sportType = "bike";
+        if (command == "calculate") {
+            handleCalculate(command_args, app);
+        } else if (command == "import") {
+            handleImport(command_args, app);
         } else {
-            std::cerr << "错误: 无效的运动类型 '" << sportTypeInput << "'." << std::endl;
+            std::cerr << "错误: 未知命令 '" << command << "'" << std::endl;
+            printMainUsage(argv[0]);
             return 1;
         }
-
-        WorkoutParameters params;
-        params.timeHr = std::stod(argv[2]);
-        params.timeMin = std::stod(argv[3]);
-        params.timeSec = std::stod(argv[4]);
-        params.distanceKm = std::stod(argv[5]);
-        params.weightKg = std::stod(argv[6]);
-        
-        app.runOnce(sportType, params);
-
     } catch (const std::exception& e) {
-        std::cerr << "错误: " << e.what() << std::endl;
-        printUsage(argv[0]);
+        std::cerr << "操作失败: " << e.what() << std::endl;
         return 1;
     }
 
     return 0;
+}
+
+
+// --- 函数实现 ---
+
+void handleCalculate(const std::vector<std::string>& args, Application& app) {
+    WorkoutParameters params = {0, 0, 0, 0, 0};
+    std::string sportType;
+
+    for (size_t i = 0; i < args.size(); ++i) {
+        const std::string& arg = args[i];
+        if ((arg == "-s" || arg == "--sport") && i + 1 < args.size()) {
+            sportType = args[++i];
+        } else if ((arg == "-H" || arg == "--hours") && i + 1 < args.size()) {
+            params.timeHr = std::stod(args[++i]);
+        } else if ((arg == "-M" || arg == "--minutes") && i + 1 < args.size()) {
+            params.timeMin = std::stod(args[++i]);
+        } else if ((arg == "-S" || arg == "--seconds") && i + 1 < args.size()) {
+            params.timeSec = std::stod(args[++i]);
+        } else if ((arg == "-d" || arg == "--distance") && i + 1 < args.size()) {
+            params.distanceKm = std::stod(args[++i]);
+        } else if ((arg == "-w" || arg == "--weight") && i + 1 < args.size()) {
+            params.weightKg = std::stod(args[++i]);
+        } else if (arg == "--help" || arg == "-h") {
+            printCalculateUsage("program"); // progName is not easily available here
+            return;
+        }
+    }
+
+    if (sportType.empty() || params.distanceKm <= 0 || params.weightKg <= 0) {
+        throw std::runtime_error("错误: 'sport', 'distance' 和 'weight' 是必须提供的参数。");
+    }
+    
+    std::string sport;
+    if (sportType == "run" || sportType == "r") sport = "run";
+    else if (sportType == "bike" || sportType == "b") sport = "bike";
+    else throw std::runtime_error("错误: 无效的运动类型 '" + sportType + "'");
+
+    app.runOnce(sport, params);
+}
+
+void handleImport(const std::vector<std::string>& args, Application& app) {
+    std::string jsonPath;
+    std::string dbDirectory = ".";
+
+    for (size_t i = 0; i < args.size(); ++i) {
+        if (args[i] == "--dbpath" && i + 1 < args.size()) {
+            dbDirectory = args[++i];
+        } else if (args[i] == "--help" || args[i] == "-h") {
+            printImportUsage("program");
+            return;
+        } else {
+            // 假设不是选项的就是文件路径
+            if (jsonPath.empty()) {
+                jsonPath = args[i];
+            } else {
+                throw std::runtime_error("错误: 指定了多个JSON文件路径。");
+            }
+        }
+    }
+
+    if (jsonPath.empty()) {
+        throw std::runtime_error("错误: 未指定要导入的JSON文件或目录。");
+    }
+    
+    std::filesystem::path finalDbPath(dbDirectory);
+    finalDbPath /= "activities.sqlite3";
+
+    app.importActivityFromJson(jsonPath, finalDbPath.string());
+}
+
+void printMainUsage(const char* progName) {
+    std::cerr << "用法: " << progName << " <command> [options]\n\n";
+    std::cerr << "一个用于计算运动热量消耗和食物等效的工具。\n\n";
+    std::cerr << "可用命令:\n";
+    std::cerr << "  calculate    根据运动参数计算热量消耗。\n";
+    std::cerr << "  import       从JSON文件导入运动记录到数据库。\n\n";
+    std::cerr << "全局选项:\n";
+    std::cerr << "  -h, --help      显示此帮助信息。\n";
+    std::cerr << "  -v, --version   显示程序版本。\n\n";
+    std::cerr << "使用 \"" << progName << " <command> --help\" 查看特定命令的帮助。\n";
+}
+
+void printCalculateUsage(const char* progName) {
+    std::cerr << "用法: " << progName << " calculate [options]\n\n";
+    std::cerr << "根据运动参数计算热量消耗。\n\n";
+    std::cerr << "选项:\n";
+    std::cerr << "  -s, --sport <type>      运动类型 ('run'/'r' 或 'bike'/'b')。\n";
+    std::cerr << "  -H, --hours <num>       持续时间的小时部分。\n";
+    std::cerr << "  -M, --minutes <num>     持续时间的分钟部分。\n";
+    std::cerr << "  -S, --seconds <num>     持续时间的秒数部分。\n";
+    std::cerr << "  -d, --distance <km>     公里数 (例如, 10.5)。\n";
+    std::cerr << "  -w, --weight <kg>       体重公斤数 (例如, 70.0)。\n";
+    std::cerr << "  -h, --help              显示此帮助信息。\n\n";
+    std::cerr << "示例:\n";
+    std::cerr << "  " << progName << " calculate -s run -M 45 -S 30 -d 10 -w 75.5\n";
+}
+
+void printCalculateUsage(const char* progName) {
+    std::cerr << "用法: " << progName << " calculate [options]\n\n";
+    std::cerr << "根据运动参数计算热量消耗。\n\n";
+    std::cerr << "选项:\n";
+    std::cerr << "  -s, --sport <type>      [必需] 运动类型 ('run'/'r' 或 'bike'/'b')。\n";
+    std::cerr << "  -d, --distance <km>     [必需] 公里数 (例如, 10.5)。\n";
+    std::cerr << "  -w, --weight <kg>       [必需] 体重公斤数 (例如, 70.0)。\n";
+    std::cerr << "  -H, --hours <num>       [可选] 持续时间的小时部分 (默认为0)。\n";
+    std::cerr << "  -M, --minutes <num>     [可选] 持续时间的分钟部分 (默认为0)。\n";
+    std::cerr << "  -S, --seconds <num>     [可选] 持续时间的秒数部分 (默认为0)。\n";
+    std::cerr << "  -h, --help              显示此帮助信息。\n\n";
+    std::cerr << "示例:\n\n";
+    std::cerr << "  # 示例 1: 跑步10公里，用时45分30秒，体重75.5公斤\n";
+    std::cerr << "  " << progName << " calculate --sport run --minutes 45 --seconds 30 --distance 10 --weight 75.5\n\n";
+    std::cerr << "  # 示例 2: 使用短选项进行一次半程马拉松计算 (21.1公里)\n";
+    std::cerr << "  " << progName << " calculate -s r -H 1 -M 55 -d 21.1 -w 70\n\n";
+    std::cerr << "  # 示例 3: 骑行25公里，用时1小时，体重80公斤\n";
+    std::cerr << "  " << progName << " calculate -s bike -H 1 -d 25 -w 80\n\n";
+    std::cerr << "  # 示例 4: 一个简短的5公里跑步，只提供分钟\n";
+    std::cerr << "  " << progName << " calculate -s run -M 30 -d 5 -w 65\n";
 }
