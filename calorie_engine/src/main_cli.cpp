@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <filesystem> // 用于路径拼接
 
 #include "app/Application.h"
 #include "common/version.h"
@@ -17,7 +18,7 @@
 // 更新了使用说明
 void printUsage(const char* progName) {
     std::cerr << "用法: " << progName << " <sport> <hours> <minutes> <seconds> <distance_km> <weight_kg>" << std::endl;
-    std::cerr << "  或: " << progName << " --import <json_file> [--db <database_file>]" << std::endl;
+    std::cerr << "  或: " << progName << " --import <json_file> [--dbpath <directory>]" << std::endl;
     std::cerr << "  <sport>        : 'run' 或 'r' 代表跑步, 'bike' 或 'b' 代表骑行。" << std::endl;
     std::cerr << "  <hours>        : 持续时间的小时部分 (例如, 1)。" << std::endl;
     std::cerr << "  <minutes>      : 持续时间的分钟部分 (例如, 30)。" << std::endl;
@@ -28,11 +29,11 @@ void printUsage(const char* progName) {
     std::cerr << "  --help, -h     : 显示此帮助信息。" << std::endl;
     std::cerr << "  --version, -v  : 显示版本信息。" << std::endl;
     std::cerr << "  --import       : 从一个JSON文件导入单条活动记录。" << std::endl;
-    std::cerr << "  --db           : (可选) 指定导入用的SQLite数据库文件路径。" << std::endl;
-    std::cerr << "                 :  如果未提供，则默认为 'activities.db'。" << std::endl;
+    std::cerr << "  --dbpath       : (可选) 指定数据库文件所在的目录。" << std::endl;
+    std::cerr << "                 :  如果未提供，则默认为程序当前目录。" << std::endl;
     std::cerr << "\n示例 (计算): " << progName << " r 0 45 30 10.0 75.5" << std::endl;
     std::cerr << "示例 (导入): " << progName << " --import activity.json" << std::endl;
-    std::cerr << "示例 (导入到指定DB): " << progName << " --import activity.json --db my_runs.db" << std::endl;
+    std::cerr << "示例 (导入到指定目录): " << progName << " --import activity.json --dbpath ../data" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -47,32 +48,50 @@ int main(int argc, char* argv[]) {
     Application app("food_data.json", "output_config.json");
 
     // --- 修改后的参数解析逻辑 ---
+    std::string jsonPath;
+    std::string dbDirectory = "."; // 默认数据库目录为当前目录
+    bool importMode = false;
+
+    // 遍历一次参数来查找导入相关的指令
     for (size_t i = 0; i < args.size(); ++i) {
         if (args[i] == "--import") {
-            // 检查 --import 后面是否跟了JSON文件名
-            if (i + 1 >= args.size()) {
+            importMode = true;
+            // 确保 --import 后面跟的是文件名而不是另一个选项
+            if (i + 1 < args.size() && args[i + 1].rfind("--", 0) != 0) {
+                jsonPath = args[++i]; // 使用该路径并跳过下一个参数
+            } else {
                 std::cerr << "错误: --import 命令需要一个JSON文件路径。" << std::endl;
                 printUsage(argv[0]);
                 return 1;
             }
-            std::string jsonPath = args[i + 1];
-            std::string dbPath = "activities.db"; // 默认数据库名称
-
-            // 检查是否提供了 --db 参数来覆盖默认值
-            if (i + 2 < args.size() && args[i + 2] == "--db") {
-                if (i + 3 < args.size()) {
-                    dbPath = args[i + 3];
-                } else {
-                    std::cerr << "错误: --db 参数需要一个数据库文件路径。" << std::endl;
-                    printUsage(argv[0]);
-                    return 1;
-                }
+        } else if (args[i] == "--dbpath") {
+            // 确保 --dbpath 后面跟的是目录名而不是另一个选项
+            if (i + 1 < args.size() && args[i + 1].rfind("--", 0) != 0) {
+                dbDirectory = args[++i]; // 使用该路径并跳过下一个参数
+            } else {
+                std::cerr << "错误: --dbpath 参数需要一个目录路径。" << std::endl;
+                printUsage(argv[0]);
+                return 1;
             }
-
-            app.importActivityFromJson(jsonPath, dbPath);
-            return 0; // 导入后退出
         }
     }
+
+    // 如果是导入模式，则执行导入并退出
+    if (importMode) {
+        if (jsonPath.empty()) {
+            std::cerr << "错误: 使用了 --import 但未指定JSON文件。" << std::endl;
+            printUsage(argv[0]);
+            return 1;
+        }
+
+        // 使用 C++17 的 filesystem 来安全地拼接路径
+        std::filesystem::path finalDbPath(dbDirectory);
+        finalDbPath /= "activities.sqlite3"; // 硬编码文件名和后缀
+
+        app.importActivityFromJson(jsonPath, finalDbPath.string());
+        return 0; // 导入后退出
+    }
+
 
     // --- 原有的计算逻辑保持不变 ---
     if (args.empty() || args[0] == "--help" || args[0] == "-h") {
