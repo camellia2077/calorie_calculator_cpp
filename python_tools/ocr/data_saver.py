@@ -34,6 +34,34 @@ def convert_to_24_hour_format(time_str: str) -> str:
         print(f"Warning: Could not convert '{time_str}' to 24-hour format. Using original value.")
         return time_str
 
+def parse_time_to_hms(time_str: str) -> dict:
+    """
+    Parses a time string like "HH:MM:SS" into a dictionary of integers.
+    If the format is incorrect, it returns a dictionary with zero values.
+    
+    :param time_str: The time string from OCR, e.g., "00:19:08".
+    :return: A dictionary like {"hours": 0, "minutes": 19, "seconds": 8}.
+    """
+    try:
+        # Split the string by ':' and convert each part to an integer
+        parts = list(map(int, time_str.split(':')))
+        
+        # Handle full "HH:MM:SS" format
+        if len(parts) == 3:
+            return {"hours": parts[0], "minutes": parts[1], "seconds": parts[2]}
+        # Handle "MM:SS" format if OCR misses the hour
+        elif len(parts) == 2:
+            return {"hours": 0, "minutes": parts[0], "seconds": parts[1]}
+        else:
+            # If the format is unexpected, return default zero values
+            print(f"Warning: Unexpected time format '{time_str}'. Defaulting to 0.")
+            return {"hours": 0, "minutes": 0, "seconds": 0}
+
+    except (ValueError, IndexError, AttributeError):
+        # Handle cases where splitting or conversion fails
+        print(f"Warning: Could not parse time string '{time_str}'. Defaulting to 0.")
+        return {"hours": 0, "minutes": 0, "seconds": 0}
+
 def sanitize_filename(name: str) -> str:
     """
     Cleans a string to make it a safe filename.
