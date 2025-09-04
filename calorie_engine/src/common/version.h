@@ -11,13 +11,13 @@ namespace AppVersion {
 constexpr int MAJOR_VERSION = 0;
 
 // 次版本号：对应新增功能或较大范围的重构
-constexpr int MINOR_VERSION = 1;
+constexpr int MINOR_VERSION = 2;
 
 // 修订号：对应小规模的错误修复或优化
-constexpr int PATCH_VERSION = 4;
+constexpr int PATCH_VERSION = 0;
 
 // 最后更新日期
-const std::string LAST_UPDATED = "2025-08-25";
+const std::string LAST_UPDATED = "2025-09-04";
 
 // 将版本号格式化为字符串，例如 "1.0.0"
 inline std::string getVersionString() {

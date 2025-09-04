@@ -4,12 +4,26 @@
 #include "data/cycling_data.h"
 #include <string>
 #include <vector>
+#include <iostream> // 用于成功消息
 
-// 修改构造函数以初始化两个管理器
+// 构造函数保持不变
 Application::Application(const std::string& foodDataPath, const std::string& outputConfigPath)
     : foodDataManager_(foodDataPath), outputConfigManager_(outputConfigPath) {}
 
-// 新的核心业务流程，可被外部直接调用
+// 新增的导入方法实现
+void Application::importActivityFromJson(const std::string& jsonFilePath, const std::string& dbPath) {
+    try {
+        DbInserterFacade::importFromJson(jsonFilePath, dbPath);
+        // 使用 std::cout 打印成功消息，因为 ui 对象没有通用的成功消息显示方法
+        std::cout << "数据已成功导入数据库。" << std::endl;
+    } catch (const std::exception& e) {
+        // 使用 ui 对象来显示错误
+        ui.displayError("导入失败: " + std::string(e.what()));
+    }
+}
+
+
+// runOnce 方法保持不变
 void Application::runOnce(const std::string& sportType, const WorkoutParameters& params) {
     // ... (代码前部分保持不变)
 
@@ -56,6 +70,7 @@ void Application::runOnce(const std::string& sportType, const WorkoutParameters&
     ui.displayResults(results, activityName, foodEquivalents, outputConfig);
 }
 
+// validateParameters 方法保持不变
 bool Application::validateParameters(const WorkoutParameters& params) {
     if (params.timeHr < 0 || params.timeMin < 0 || params.timeMin >= 60 ||
         params.timeSec < 0 || params.timeSec >= 60 || params.distanceKm <= 0 ||

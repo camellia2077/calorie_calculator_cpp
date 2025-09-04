@@ -6,7 +6,7 @@
 
 # 请将此路径替换为您存放所有待处理图片的文件夹路径。
 # 例如: "C:/Users/YourUser/Desktop/RunningImages"
-IMAGE_DIRECTORY = r'C:\Computer\my_github\github_cpp\workout_heat\pics'
+IMAGE_DIRECTORY = r'C:\Computer\my_github\github_cpp\workout_heat\run_pics'
 
 # 请指定一个用于存放输出的 JSON 文件的文件夹路径。
 # 如果该文件夹不存在，程序会自动创建。

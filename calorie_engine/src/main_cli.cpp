@@ -3,29 +3,36 @@
 #include <vector>
 #include <stdexcept>
 
-// 只需包含 Application.h，它会处理所有核心业务逻辑
 #include "app/Application.h"
-// 新增：包含版本信息头文件，以便访问版本号
 #include "common/version.h"
+// 确保包含了DbInserterFacade.h，即使这里不直接调用
+// 因为Application.h会用到它
+#include "db_inserter/DbInserterFacade.h"
 
-// 平台设置
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
-// 打印使用说明 (已更新)
+// 更新了使用说明
 void printUsage(const char* progName) {
-    std::cerr << "Usage: " << progName << " <sport> <hours> <minutes> <seconds> <distance_km> <weight_kg>" << std::endl;
-    std::cerr << "  <sport>        : 'run' or 'r' for running, 'bike' or 'b' for cycling." << std::endl;
-    std::cerr << "  <hours>        : Duration hours (e.g., 1)." << std::endl;
-    std::cerr << "  <minutes>      : Duration minutes (e.g., 30)." << std::endl;
-    std::cerr << "  <seconds>      : Duration seconds (e.g., 0)." << std::endl;
-    std::cerr << "  <distance_km>  : Distance in kilometers (e.g., 10.5)." << std::endl;
-    std::cerr << "  <weight_kg>    : Your weight in kilograms (e.g., 70.0)." << std::endl;
-    std::cerr << "\nOptions:" << std::endl;
-    std::cerr << "  --help, -h     : Show this help message." << std::endl;
-    std::cerr << "  --version, -v  : Show version information." << std::endl;
-    std::cerr << "\nExample: " << progName << " r 0 45 30 10.0 75.5" << std::endl;
+    std::cerr << "用法: " << progName << " <sport> <hours> <minutes> <seconds> <distance_km> <weight_kg>" << std::endl;
+    std::cerr << "  或: " << progName << " --import <json_file> [--db <database_file>]" << std::endl;
+    std::cerr << "  <sport>        : 'run' 或 'r' 代表跑步, 'bike' 或 'b' 代表骑行。" << std::endl;
+    std::cerr << "  <hours>        : 持续时间的小时部分 (例如, 1)。" << std::endl;
+    std::cerr << "  <minutes>      : 持续时间的分钟部分 (例如, 30)。" << std::endl;
+    std::cerr << "  <seconds>      : 持续时间的秒数部分 (例如, 0)。" << std::endl;
+    std::cerr << "  <distance_km>  : 公里数 (例如, 10.5)。" << std::endl;
+    std::cerr << "  <weight_kg>    : 体重公斤数 (例如, 70.0)。" << std::endl;
+    std::cerr << "\n选项:" << std::endl;
+    std::cerr << "  --help, -h     : 显示此帮助信息。" << std::endl;
+    std::cerr << "  --version, -v  : 显示版本信息。" << std::endl;
+    std::cerr << "  --import       : 从一个JSON文件导入单条活动记录。" << std::endl;
+    std::cerr << "  --db           : (可选) 指定导入用的SQLite数据库文件路径。" << std::endl;
+    std::cerr << "                 :  如果未提供，则默认为 'activities.db'。" << std::endl;
+    std::cerr << "\n示例 (计算): " << progName << " r 0 45 30 10.0 75.5" << std::endl;
+    std::cerr << "示例 (导入): " << progName << " --import activity.json" << std::endl;
+    std::cerr << "示例 (导入到指定DB): " << progName << " --import activity.json --db my_runs.db" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -35,43 +42,63 @@ int main(int argc, char* argv[]) {
     SetConsoleCP(CP_UTF8);
 #endif
 
-    // 新增：检查帮助或版本号请求
-    // 当只有一个参数时，检查它是否为帮助或版本号标志
-    if (argc == 2) {
-        std::string arg = argv[1];
-        if (arg == "--help" || arg == "-h") {
-            printUsage(argv[0]);
-            return 0; // 正常退出
-        }
-        if (arg == "--version" || arg == "-v") {
-            // 从 AppVersion 命名空间获取版本信息
-            std::cout << "Version: " << AppVersion::getVersionString() << std::endl;
-            std::cout << "Last Updated: " << AppVersion::LAST_UPDATED << std::endl;
-            return 0; // 正常退出
-        }
-    }
+    std::vector<std::string> args(argv + 1, argv + argc);
 
-    // 1. 检查执行计算所需的参数数量是否正确
-    if (argc != 7) {
-        printUsage(argv[0]);
-        return 1; // 返回错误码
-    }
-
-    // 使用新的构造函数实例化 Application 对象，并传入食物和输出配置文件路径
     Application app("food_data.json", "output_config.json");
 
+    // --- 修改后的参数解析逻辑 ---
+    for (size_t i = 0; i < args.size(); ++i) {
+        if (args[i] == "--import") {
+            // 检查 --import 后面是否跟了JSON文件名
+            if (i + 1 >= args.size()) {
+                std::cerr << "错误: --import 命令需要一个JSON文件路径。" << std::endl;
+                printUsage(argv[0]);
+                return 1;
+            }
+            std::string jsonPath = args[i + 1];
+            std::string dbPath = "activities.db"; // 默认数据库名称
+
+            // 检查是否提供了 --db 参数来覆盖默认值
+            if (i + 2 < args.size() && args[i + 2] == "--db") {
+                if (i + 3 < args.size()) {
+                    dbPath = args[i + 3];
+                } else {
+                    std::cerr << "错误: --db 参数需要一个数据库文件路径。" << std::endl;
+                    printUsage(argv[0]);
+                    return 1;
+                }
+            }
+
+            app.importActivityFromJson(jsonPath, dbPath);
+            return 0; // 导入后退出
+        }
+    }
+
+    // --- 原有的计算逻辑保持不变 ---
+    if (args.empty() || args[0] == "--help" || args[0] == "-h") {
+        printUsage(argv[0]);
+        return 0;
+    }
+    if (args[0] == "--version" || args[0] == "-v") {
+        std::cout << "Version: " << AppVersion::getVersionString() << std::endl;
+        std::cout << "Last Updated: " << AppVersion::LAST_UPDATED << std::endl;
+        return 0;
+    }
+
+    if (argc != 7) {
+        printUsage(argv[0]);
+        return 1;
+    }
+    
     try {
-        // 2. 解析命令行参数
         std::string sportTypeInput = argv[1];
         std::string sportType;
-
-        // 修改：处理运动类型的别名
         if (sportTypeInput == "run" || sportTypeInput == "r") {
             sportType = "run";
         } else if (sportTypeInput == "bike" || sportTypeInput == "b") {
             sportType = "bike";
         } else {
-            std::cerr << "Error: Invalid sport type '" << sportTypeInput << "'. Please use 'run', 'r', 'bike', or 'b'." << std::endl;
+            std::cerr << "错误: 无效的运动类型 '" << sportTypeInput << "'." << std::endl;
             return 1;
         }
 
@@ -81,15 +108,14 @@ int main(int argc, char* argv[]) {
         params.timeSec = std::stod(argv[4]);
         params.distanceKm = std::stod(argv[5]);
         params.weightKg = std::stod(argv[6]);
-
-        // 3. 创建 Application 实例并调用核心逻辑
+        
         app.runOnce(sportType, params);
 
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << "错误: " << e.what() << std::endl;
         printUsage(argv[0]);
         return 1;
     }
 
-    return 0; // 成功退出
+    return 0;
 }

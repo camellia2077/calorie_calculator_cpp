@@ -21,9 +21,16 @@ endif()
 
 # ==================== 修改开始 ====================
 
+# 新增: 查找 SQLite3 库
+find_package(SQLite3 REQUIRED) # <--- ADDED
+
 # 4. 创建一个核心静态库，并显式列出所有共享源文件
 add_library(workout_lib STATIC
     src/app/Application.cpp
+
+    src/db_inserter/DatabaseManager.cpp
+    src/db_inserter/DbInserterFacade.cpp
+    src/db_inserter/JsonImporter.cpp
     
     src/core/CalculationEngine.cpp
     src/core/FoodConverter.cpp
@@ -38,12 +45,13 @@ add_library(workout_lib STATIC
 )
 
 # 5. 将通用配置应用到核心库上
-# 使用 PUBLIC 关键字，这样链接到该库的目标会自动继承这些设置
 target_include_directories(workout_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_precompile_headers(workout_lib PUBLIC <pch.h>) 
 
-# 将 stdc++exp 链接到库，这样可执行文件也会链接它
-target_link_libraries(workout_lib PUBLIC stdc++exp) 
+# stdc++exp是为了<print>
+# 将 stdc++exp 和 SQLite3 链接到库
+# 使用 PUBLIC 关键字，这样可执行文件也会正确链接
+target_link_libraries(workout_lib PUBLIC stdc++exp SQLite::SQLite3) # <--- MODIFIED
 
 # 6. 定义独立的可执行文件目标 (只保留CLI版本)
 add_executable(calorie_calculator_cli src/main_cli.cpp) 
@@ -59,7 +67,6 @@ set(RELEASE_COMPILE_OPTIONS -Os)
 set(RELEASE_LINK_OPTIONS -s)
 
 # 将编译选项应用到所有目标
-# 注意：现在也需要为 workout_lib 设置这些选项
 target_compile_options(workout_lib PRIVATE ${COMMON_COMPILE_OPTIONS}) 
 target_compile_options(calorie_calculator_cli PRIVATE ${COMMON_COMPILE_OPTIONS}) 
 
