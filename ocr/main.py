@@ -59,8 +59,9 @@ def process_image(extractor: OcrExtractor, image_path: str):
 
     # Part 3: Save the data for the current image.
     try:
-        # Create a safe base filename from the original extracted time
-        base_filename = sanitize_filename(extracted_data["start_time"]) + ".json"
+        # --- MODIFIED: Use 'start_time_24' for the filename ---
+        # Create a safe base filename from the new ISO 8601 timestamp
+        base_filename = sanitize_filename(ordered_data["start_time_24"]) + ".json"
         
         # Combine the output directory with the base filename to get the full path
         output_path = os.path.join(config.JSON_OUTPUT_DIRECTORY, base_filename)
