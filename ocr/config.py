@@ -2,9 +2,16 @@
 #                      字段提取配置文件
 # ===================================================================
 
-# 请将 'images' 替换为您存放所有待处理图片的文件夹路径。
+# --- 目录配置 (Directory Configuration) ---
+
+# 请将此路径替换为您存放所有待处理图片的文件夹路径。
 # 例如: "C:/Users/YourUser/Desktop/RunningImages"
 IMAGE_DIRECTORY = r'C:\Computer\my_github\github_cpp\workout_heat\pics'
+
+# 请指定一个用于存放输出的 JSON 文件的文件夹路径。
+# 如果该文件夹不存在，程序会自动创建。
+JSON_OUTPUT_DIRECTORY = 'workout_json'
+
 
 # ===================================================================
 # 'name': 将是最终JSON文件中的键名 (key)。

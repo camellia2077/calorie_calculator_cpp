@@ -34,14 +34,11 @@ class OcrExtractor:
         results_dict = {}
         try:
             source_image = Image.open(image_path)
-            print(f"\nImage '{image_path}' loaded successfully.")
-
-            print("Starting data extraction for the following fields:")
+            # The line below has been commented out.
+            # print("Starting data extraction for the following fields:")
             for field in fields:
                 field_name = field['name']
                 box = field['box']
-                
-                print(f"  - Processing field: '{field_name}'...")
                 
                 # Crop the image and convert to a NumPy array for EasyOCR
                 cropped_image_pil = source_image.crop(box)

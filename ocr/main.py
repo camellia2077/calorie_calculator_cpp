@@ -4,6 +4,25 @@ import config  # Your field configuration
 from ocr_extractor import OcrExtractor
 from data_saver import save_dict_to_json, sanitize_filename
 
+def validate_config():
+    """
+    Checks that all required directory paths in the config file are set.
+    If any path is empty or None, the program will exit.
+    """
+    print("--- Validating configuration ---")
+    
+    # Check if the image directory path is provided
+    if not config.IMAGE_DIRECTORY:
+        print("Error: 'IMAGE_DIRECTORY' in config.py is empty. Please specify the path to your images.")
+        sys.exit(1)
+        
+    # Check if the JSON output directory path is provided
+    if not config.JSON_OUTPUT_DIRECTORY:
+        print("Error: 'JSON_OUTPUT_DIRECTORY' in config.py is empty. Please specify a path for JSON output.")
+        sys.exit(1)
+        
+    print("Configuration is valid.")
+
 def process_image(extractor: OcrExtractor, image_path: str):
     """
     Processes a single image: extracts data, validates it, and saves it to JSON.
@@ -14,7 +33,7 @@ def process_image(extractor: OcrExtractor, image_path: str):
     print(f"\n{'='*20} Processing Image: {os.path.basename(image_path)} {'='*20}")
     
     # Part 1: Perform the extraction for the current image.
-    extracted_data = extractor.extract_data_from_image(image_path, config.FIELDS) #
+    extracted_data = extractor.extract_data_from_image(image_path, config.FIELDS)
     
     # Part 2: Validate the extracted data.
     if "error" in extracted_data:
@@ -29,9 +48,15 @@ def process_image(extractor: OcrExtractor, image_path: str):
 
     # Part 3: Save the data for the current image.
     try:
-        output_filename = sanitize_filename(start_time_value) + ".json" #
-        save_dict_to_json(extracted_data, output_filename) #
-        print(f"Success! Data saved to: {output_filename}")
+        # Create a safe base filename from the extracted time
+        base_filename = sanitize_filename(start_time_value) + ".json"
+        
+        # Combine the output directory with the base filename to get the full path
+        output_path = os.path.join(config.JSON_OUTPUT_DIRECTORY, base_filename)
+        
+        # Save the dictionary to the specified path
+        save_dict_to_json(extracted_data, output_path)
+        print(f"Success! Data saved to: {output_path}")
     except Exception as e:
         print(f"An error occurred while writing the JSON file: {e}")
 
@@ -40,12 +65,24 @@ def main():
     """
     Main function to find all images in a directory and orchestrate the processing.
     """
-    # --- Setup: Check directory and find images ---
+    # --- Step 1: Validate Configuration ---
+    validate_config()
+
+    # --- Step 2: Setup Directories ---
     image_directory = config.IMAGE_DIRECTORY
+    output_directory = config.JSON_OUTPUT_DIRECTORY
+
+    # Check if image directory exists
     if not os.path.isdir(image_directory):
         print(f"Error: The image directory specified in config.py does not exist: '{image_directory}'")
         sys.exit(1)
+        
+    # Check if output directory exists, create it if it doesn't
+    if not os.path.isdir(output_directory):
+        print(f"Output directory '{output_directory}' not found. Creating it now.")
+        os.makedirs(output_directory)
 
+    # --- Step 3: Find and Process Images ---
     # Define valid image extensions and find all matching files
     valid_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.tiff')
     image_files = [f for f in os.listdir(image_directory) if f.lower().endswith(valid_extensions)]
@@ -56,7 +93,6 @@ def main():
     
     print(f"Found {len(image_files)} image(s) to process in '{image_directory}'.")
 
-    # --- Processing: Initialize model and loop through images ---
     # Create the extractor instance once. The model loads only at the beginning.
     extractor = OcrExtractor()
     
