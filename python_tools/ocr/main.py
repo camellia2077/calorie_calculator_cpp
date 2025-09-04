@@ -2,8 +2,14 @@ import sys
 import os
 import config  # Your field configuration
 from ocr_extractor import OcrExtractor
-# Import the helper functions from data_saver
-from data_saver import save_dict_to_json, sanitize_filename, convert_to_24_hour_format, parse_time_to_hms
+# --- MODIFIED: Import the new unix timestamp conversion function ---
+from data_saver import (
+    save_dict_to_json, 
+    sanitize_filename, 
+    convert_to_24_hour_format, 
+    parse_time_to_hms,
+    convert_iso_to_unix
+)
 
 def validate_config():
     """
@@ -46,7 +52,7 @@ def process_image(extractor: OcrExtractor, image_path: str):
         print("Skipping JSON file generation for this image.")
         return  # Skip to the next image
 
-    # --- MODIFIED: Restructure the dictionary to include a "raw_data" key ---
+    # --- MODIFIED: Add Unix timestamp to the "processed_data" key ---
     
     # Initialize the final dictionary that will be saved to JSON.
     final_data = {}
@@ -64,6 +70,10 @@ def process_image(extractor: OcrExtractor, image_path: str):
 
     # Add the 24-hour timestamp to the "processed_data" dictionary.
     processed_data_dict["start_time_24"] = start_time_24h
+
+    # --- NEW: Convert the ISO time to a Unix timestamp and add it ---
+    unix_timestamp = convert_iso_to_unix(start_time_24h)
+    processed_data_dict["unix_timestamp"] = unix_timestamp
 
     # Get the time string from raw_data, parse it, and add the components.
     time_str = final_data["raw_data"].get("time", "")

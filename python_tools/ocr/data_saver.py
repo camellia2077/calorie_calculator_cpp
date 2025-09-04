@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 def convert_to_24_hour_format(time_str: str) -> str:
     """
@@ -22,17 +23,31 @@ def convert_to_24_hour_format(time_str: str) -> str:
         # Adjust hour for 24-hour format
         if is_pm and hour < 12:
             hour += 12
-        elif is_am and hour == 12:  # Handle midnight case (e.g., 上午12:30 -> 00:30)
+        elif is_am and hour == 12:
             hour = 0
             
-        # --- MODIFIED: Reconstruct the string to follow the ISO 8601 standard ---
-        # f-string formatting with :02d and :04d handles automatic zero-padding
         return f"{year:04d}-{month:02d}-{day:02d}T{hour:02d}:{minute:02d}:00"
 
     except (ValueError, IndexError):
-        # If OCR result is not in the expected format, return the original string
         print(f"Warning: Could not convert '{time_str}' to 24-hour format. Using original value.")
         return time_str
+
+def convert_iso_to_unix(iso_str: str) -> int:
+    """
+    Converts an ISO 8601 formatted string to a Unix timestamp (integer seconds).
+    
+    :param iso_str: A time string in "YYYY-MM-DDTHH:MM:SS" format.
+    :return: An integer representing the Unix timestamp, or 0 if conversion fails.
+    """
+    try:
+        # Python 3.7+ can directly parse this ISO format
+        dt_object = datetime.fromisoformat(iso_str)
+        # .timestamp() returns a float, so we convert it to an integer
+        return int(dt_object.timestamp())
+    except (ValueError, TypeError):
+        # Handle cases where the iso_str is not in the correct format
+        print(f"Warning: Could not convert '{iso_str}' to a Unix timestamp. Defaulting to 0.")
+        return 0
 
 def parse_time_to_hms(time_str: str) -> dict:
     """
@@ -43,22 +58,17 @@ def parse_time_to_hms(time_str: str) -> dict:
     :return: A dictionary like {"hours": 0, "minutes": 19, "seconds": 8}.
     """
     try:
-        # Split the string by ':' and convert each part to an integer
         parts = list(map(int, time_str.split(':')))
         
-        # Handle full "HH:MM:SS" format
         if len(parts) == 3:
             return {"hours": parts[0], "minutes": parts[1], "seconds": parts[2]}
-        # Handle "MM:SS" format if OCR misses the hour
         elif len(parts) == 2:
             return {"hours": 0, "minutes": parts[0], "seconds": parts[1]}
         else:
-            # If the format is unexpected, return default zero values
             print(f"Warning: Unexpected time format '{time_str}'. Defaulting to 0.")
             return {"hours": 0, "minutes": 0, "seconds": 0}
 
     except (ValueError, IndexError, AttributeError):
-        # Handle cases where splitting or conversion fails
         print(f"Warning: Could not parse time string '{time_str}'. Defaulting to 0.")
         return {"hours": 0, "minutes": 0, "seconds": 0}
 
@@ -67,9 +77,7 @@ def sanitize_filename(name: str) -> str:
     Cleans a string to make it a safe filename.
     Replaces characters that are unsafe in Windows/Linux/Mac filenames.
     """
-    # Replace slashes, colons, and spaces
     name = name.replace('/', '-').replace(':', '-').replace(' ', '_')
-    # You can add more replacement rules here if needed
     return name
 
 def save_dict_to_json(data: dict, filename: str):
@@ -80,9 +88,5 @@ def save_dict_to_json(data: dict, filename: str):
     :param filename: The path of the output file.
     :raises: Can raise IO-related exceptions if the file cannot be written.
     """
-    # The 'with' statement ensures the file is properly closed.
-    # encoding='utf-8' is crucial for handling non-ASCII characters.
-    # indent=4 makes the JSON file human-readable.
-    # ensure_ascii=False allows Chinese characters to be saved correctly.
     with open(filename, 'w', encoding='utf-8') as json_file:
         json.dump(data, json_file, indent=4, ensure_ascii=False)
