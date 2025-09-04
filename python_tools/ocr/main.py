@@ -2,7 +2,7 @@ import sys
 import os
 import config  # Your field configuration
 from ocr_extractor import OcrExtractor
-# --- MODIFIED: Import the new function from data_saver ---
+# Import the helper functions from data_saver
 from data_saver import save_dict_to_json, sanitize_filename, convert_to_24_hour_format, parse_time_to_hms
 
 def validate_config():
@@ -46,38 +46,43 @@ def process_image(extractor: OcrExtractor, image_path: str):
         print("Skipping JSON file generation for this image.")
         return  # Skip to the next image
 
-    # --- MODIFIED: Restructure the dictionary and add the "sqlite" key ---
+    # --- MODIFIED: Restructure the dictionary to include a "raw_data" key ---
     
-    # Create the base dictionary from OCR results
-    final_data = extracted_data.copy()
+    # Initialize the final dictionary that will be saved to JSON.
+    final_data = {}
+
+    # Place all the raw OCR results under the "raw_data" key.
+    final_data["raw_data"] = extracted_data
     
-    # Generate the 24-hour timestamp. This is needed for both the filename and the "sqlite" key.
-    start_time_24h = convert_to_24_hour_format(final_data.get("start_time", ""))
+    # Now, build the "processed_data" dictionary using values from "raw_data".
+    
+    # Generate the 24-hour timestamp from the raw start_time.
+    start_time_24h = convert_to_24_hour_format(final_data["raw_data"].get("start_time", ""))
 
-    # Initialize the "sqlite" sub-dictionary
-    sqlite_data = {}
+    # Initialize the "processed_data" sub-dictionary.
+    processed_data_dict = {}
 
-    # Add the 24-hour timestamp to the "sqlite" dictionary
-    sqlite_data["start_time_24"] = start_time_24h
+    # Add the 24-hour timestamp to the "processed_data" dictionary.
+    processed_data_dict["start_time_24"] = start_time_24h
 
-    # Get the time string, parse it, and add the components to the "sqlite" dictionary
-    time_str = final_data.get("time", "")
+    # Get the time string from raw_data, parse it, and add the components.
+    time_str = final_data["raw_data"].get("time", "")
     time_components = parse_time_to_hms(time_str)
-    sqlite_data.update(time_components) # .update() merges the two dictionaries
+    processed_data_dict.update(time_components) # .update() merges the two dictionaries
 
-    # Add the completed "sqlite" dictionary to the main data object
-    final_data["sqlite"] = sqlite_data
+    # Add the completed "processed_data" dictionary to the main data object at the top level.
+    final_data["processed_data"] = processed_data_dict
     # --- END OF MODIFICATION ---
 
     # Part 3: Save the data for the current image.
     try:
-        # Create a safe base filename from the ISO 8601 timestamp
+        # Create a safe base filename from the ISO 8601 timestamp.
         base_filename = sanitize_filename(start_time_24h) + ".json"
         
-        # Combine the output directory with the base filename to get the full path
+        # Combine the output directory with the base filename to get the full path.
         output_path = os.path.join(config.JSON_OUTPUT_DIRECTORY, base_filename)
         
-        # Save the newly structured dictionary to the specified path
+        # Save the newly structured dictionary to the specified path.
         save_dict_to_json(final_data, output_path)
         print(f"Success! Data saved to: {output_path}")
     except Exception as e:
