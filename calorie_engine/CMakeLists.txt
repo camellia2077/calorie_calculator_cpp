@@ -39,38 +39,33 @@ add_library(workout_lib STATIC
 # 5. 将通用配置应用到核心库上
 # 使用 PUBLIC 关键字，这样链接到该库的目标会自动继承这些设置
 target_include_directories(workout_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_precompile_headers(workout_lib PUBLIC <pch.h>)
+target_precompile_headers(workout_lib PUBLIC <pch.h>) 
 
 # 将 stdc++exp 链接到库，这样可执行文件也会链接它
-target_link_libraries(workout_lib PUBLIC stdc++exp)
+target_link_libraries(workout_lib PUBLIC stdc++exp) 
 
-# 6. 定义两个独立的可执行文件目标
-add_executable(calorie_calculator src/main.cpp)
-add_executable(calorie_calculator_cli src/main_cli.cpp)
+# 6. 定义独立的可执行文件目标 (只保留CLI版本)
+add_executable(calorie_calculator_cli src/main_cli.cpp) 
 
 # 7. 将可执行文件链接到核心库
-target_link_libraries(calorie_calculator PRIVATE workout_lib)
-target_link_libraries(calorie_calculator_cli PRIVATE workout_lib)
+target_link_libraries(calorie_calculator_cli PRIVATE workout_lib) 
 
 # ==================== 修改结束 ====================
 
-# 8. 为两个目标添加通用的编译和链接选项
+# 8. 为所有目标添加通用的编译和链接选项
 set(COMMON_COMPILE_OPTIONS "-fdiagnostics-color=always")
 set(RELEASE_COMPILE_OPTIONS -Os)
 set(RELEASE_LINK_OPTIONS -s)
 
 # 将编译选项应用到所有目标
 # 注意：现在也需要为 workout_lib 设置这些选项
-target_compile_options(workout_lib PRIVATE ${COMMON_COMPILE_OPTIONS})
-target_compile_options(calorie_calculator PRIVATE ${COMMON_COMPILE_OPTIONS})
-target_compile_options(calorie_calculator_cli PRIVATE ${COMMON_COMPILE_OPTIONS})
+target_compile_options(workout_lib PRIVATE ${COMMON_COMPILE_OPTIONS}) 
+target_compile_options(calorie_calculator_cli PRIVATE ${COMMON_COMPILE_OPTIONS}) 
 
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Release mode build: Applying size optimization flags (-Os, -s).")
-    target_compile_options(workout_lib PRIVATE ${RELEASE_COMPILE_OPTIONS})
-    target_compile_options(calorie_calculator PRIVATE ${RELEASE_COMPILE_OPTIONS})
-    target_compile_options(calorie_calculator_cli PRIVATE ${RELEASE_COMPILE_OPTIONS})
+    target_compile_options(workout_lib PRIVATE ${RELEASE_COMPILE_OPTIONS}) 
+    target_compile_options(calorie_calculator_cli PRIVATE ${RELEASE_COMPILE_OPTIONS}) 
     
-    target_link_options(calorie_calculator PRIVATE ${RELEASE_LINK_OPTIONS})
-    target_link_options(calorie_calculator_cli PRIVATE ${RELEASE_LINK_OPTIONS})
+    target_link_options(calorie_calculator_cli PRIVATE ${RELEASE_LINK_OPTIONS}) 
 endif()

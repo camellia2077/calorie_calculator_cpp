@@ -1,0 +1,69 @@
+{
+  "food_categories": [
+    {
+      "category_name": "常见水果",
+      "items": [
+        {"name": "苹果", "kcalPer100": 52.0, "type": "Solid"},
+        {"name": "香蕉", "kcalPer100": 89.0, "type": "Solid"},
+        {"name": "西瓜", "kcalPer100": 30.0, "type": "Solid"},
+        {"name": "草莓", "kcalPer100": 32.0, "type": "Solid"},
+        {"name": "橙子", "kcalPer100": 47.0, "type": "Solid"},
+        {"name": "芒果", "kcalPer100": 60.0, "type": "Solid"}
+      ]
+    },
+    {
+      "category_name": "常见蔬菜",
+      "items": [
+        {"name": "西兰花", "kcalPer100": 34.0, "type": "Solid"},
+        {"name": "黄瓜", "kcalPer100": 15.0, "type": "Solid"},
+        {"name": "番茄", "kcalPer100": 18.0, "type": "Solid"},
+        {"name": "胡萝卜", "kcalPer100": 41.0, "type": "Solid"},
+        {"name": "菠菜", "kcalPer100": 23.0, "type": "Solid"},
+        {"name": "生菜", "kcalPer100": 15.0, "type": "Solid"}
+      ]
+    },
+    {
+      "category_name": "常见主食",
+      "items": [
+        {"name": "米饭", "kcalPer100": 130.0, "type": "Solid"},
+        {"name": "馒头", "kcalPer100": 223.0, "type": "Solid"},
+        {"name": "面条 (煮熟)", "kcalPer100": 131.0, "type": "Solid"},
+        {"name": "全麦面包", "kcalPer100": 247.0, "type": "Solid"},
+        {"name": "燕麦片 (加水煮)", "kcalPer100": 71.0, "type": "Solid"}
+      ]
+    },
+    {
+      "category_name": "常见肉类/蛋白质",
+      "items": [
+        {"name": "鸡胸肉 (去皮煮熟)", "kcalPer100": 165.0, "type": "Solid"},
+        {"name": "三文鱼 (烤)", "kcalPer100": 208.0, "type": "Solid"},
+        {"name": "牛肉 (瘦肉, 烤)", "kcalPer100": 250.0, "type": "Solid"},
+        {"name": "鸡蛋 (煮)", "kcalPer100": 155.0, "type": "Solid"}
+      ]
+    },
+    {
+      "category_name": "常见零食",
+      "items": [
+        {"name": "乐事原味薯片", "kcalPer100": 543.0, "type": "Solid"},
+        {"name": "奥利奥原味饼干", "kcalPer100": 478.0, "type": "Solid"},
+        {"name": "趣多多原味曲奇", "kcalPer100": 507.0, "type": "Solid"}
+      ]
+    },
+    {
+      "category_name": "常见饮料",
+      "items": [
+        {"name": "可口可乐", "kcalPer100": 43.0, "type": "Liquid"},
+        {"name": "百事可乐", "kcalPer100": 45.0, "type": "Liquid"},
+        {"name": "雪碧", "kcalPer100": 46.0, "type": "Liquid"}
+      ]
+    },
+    {
+      "category_name": "宏量营养素",
+      "items": [
+        {"name": "纯碳水化合物", "kcalPer100": 400.0, "type": "Solid"},
+        {"name": "纯蛋白质", "kcalPer100": 400.0, "type": "Solid"},
+        {"name": "纯脂肪", "kcalPer100": 900.0, "type": "Solid"}
+      ]
+    }
+  ]
+}
