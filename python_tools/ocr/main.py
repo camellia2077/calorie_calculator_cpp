@@ -52,7 +52,7 @@ def process_image(extractor: OcrExtractor, image_path: str):
         print("Skipping JSON file generation for this image.")
         return  # Skip to the next image
 
-    # --- MODIFIED: Elevate Unix timestamp to the top level ---
+    # --- Structure modification and data processing ---
     
     # Initialize the final dictionary that will be saved to JSON.
     final_data = {}
@@ -60,7 +60,7 @@ def process_image(extractor: OcrExtractor, image_path: str):
     # Generate the 24-hour timestamp first, as it's needed for the Unix timestamp.
     start_time_24h = convert_to_24_hour_format(extracted_data.get("start_time", ""))
 
-    # --- NEW: Calculate and add the Unix timestamp to the TOP-LEVEL dictionary ---
+    # Calculate and add the Unix timestamp to the TOP-LEVEL dictionary.
     unix_timestamp = convert_iso_to_unix(start_time_24h)
     final_data["unix_timestamp"] = unix_timestamp
 
@@ -77,6 +77,16 @@ def process_image(extractor: OcrExtractor, image_path: str):
     time_str = final_data["raw_data"].get("time", "")
     time_components = parse_time_to_hms(time_str)
     processed_data_dict.update(time_components)
+
+    # --- NEW: Map sport_type to its English equivalent ---
+    # Get the extracted sport type from the raw data.
+    raw_sport_type = final_data["raw_data"].get("sport_type")
+    
+    # Look up the raw value in the mapping dictionary from config.py.
+    if raw_sport_type in config.SPORT_TYPE_MAPPING:
+        # If a mapping is found, add the English version to processed_data.
+        processed_data_dict["sport_type_english"] = config.SPORT_TYPE_MAPPING[raw_sport_type]
+    # --- END OF NEW CODE ---
 
     # Add the completed "processed_data" dictionary to the main data object.
     final_data["processed_data"] = processed_data_dict
