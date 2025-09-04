@@ -14,7 +14,7 @@ constexpr int MAJOR_VERSION = 0;
 constexpr int MINOR_VERSION = 2;
 
 // 修订号：对应小规模的错误修复或优化
-constexpr int PATCH_VERSION = 0;
+constexpr int PATCH_VERSION = 1;
 
 // 最后更新日期
 const std::string LAST_UPDATED = "2025-09-04";

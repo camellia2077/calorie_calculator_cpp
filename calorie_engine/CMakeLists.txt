@@ -28,6 +28,8 @@ find_package(SQLite3 REQUIRED) # <--- ADDED
 add_library(workout_lib STATIC
     src/app/Application.cpp
 
+    src/utils/FileFinder.cpp # <--- 修改此行
+
     src/db_inserter/DatabaseManager.cpp
     src/db_inserter/DbInserterFacade.cpp
     src/db_inserter/JsonImporter.cpp
