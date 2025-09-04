@@ -1,73 +1,56 @@
 # ===================================================================
-#                      字段提取配置文件
+#                      Graph Parser - Configuration File
 # ===================================================================
 
-# --- 目录配置 (Directory Configuration) ---
-
-# 请将此路径替换为您存放所有待处理图片的文件夹路径。
-# 例如: "C:/Users/YourUser/Desktop/RunningImages"
-IMAGE_DIRECTORY = r'C:\Computer\my_github\github_cpp\workout_heat\run_pics'
-
-# 请指定一个用于存放输出的 JSON 文件的文件夹路径。
-# 如果该文件夹不存在，程序会自动创建。
-JSON_OUTPUT_DIRECTORY = 'workout_json'
+# --- 1. Basic Configuration ---
+# Path to the image file to be analyzed
+IMAGE_FILE = r'bpm.jpg'
+# Output CSV file name
+CSV_OUTPUT_FILE = "extracted_data.csv"
+# Output chart image file name
+PLOT_OUTPUT_FILE = "extracted_plot.png"
 
 
-# ===================================================================
-# 'name': 将是最终JSON文件中的键名 (key)。
-# 'box':  是您使用图像编辑工具测量的 (left, top, right, bottom) 坐标。
-#
-# 要添加新字段，只需复制一个字典块并修改其中的值即可。
-# ===================================================================
+# --- 2. Image Coordinate Configuration (Fixed) ---
+# These coordinates are shared by all data types
 
-FIELDS = [
+# Top-left and bottom-right pixel coordinates of the graph grid area (x, y)
+TOP_LEFT_PX = (164, 414)
+BOTTOM_RIGHT_PX = (2505, 1077)
+
+# OCR area for the end time text (top-left x, top-left y, bottom-right x, bottom-right y)
+OCR_END_TIME_BOX = (2374, 1099, 2500, 1130)
+
+
+# --- 3. Data Type Configuration (Extensible) ---
+
+# MODIFIED: Specify the "name" of the data type you want to recognize
+# For example, set it to "Heart Rate" or "Cadence"
+TARGET_DATA_NAME = "Heart Rate"
+
+# Define the data types you want to parse in this list.
+# The program will look up and use the corresponding configuration based on TARGET_DATA_NAME.
+DATA_TYPES = [
     {
-        "name": "start_time",
-        "box": (69, 679, 565, 731) # 运动开始的时间
+        "name": "Heart Rate",                 # Data name
+        "unit": "BPM",                      # Data unit
+        "y_axis_min": 30.0,                 # Y-axis minimum value
+        "y_axis_max": 210.0,                # Y-axis maximum value
+        "color_ranges": [                   # HSV color ranges for the line
+            # Red color range (includes two parts)
+            ([0, 70, 50], [10, 255, 255]),
+            ([170, 70, 50], [180, 255, 255]),
+        ]
     },
     {
-        "name": "sport_type",
-        "box": (63, 551, 461, 655) # 运动类型,例如室内跑步
+        "name": "Cadence",                   # You can add other types, like Cadence
+        "unit": "spm",                      # strides per minute
+        "y_axis_min": 0.0,
+        "y_axis_max": 220.0,
+        "color_ranges": [
+             # Example range for yellow
+             ([25, 70, 50], [35, 255, 255]),
+        ]
     },
-    {
-        "name": "data_source",
-        "box": (83, 851, 353, 913) # 数据来源
-    },
-    {
-        "name": "mileage", 
-        "box": (91, 943, 357, 1077) # 运动里程
-    },
-    {
-        "name": "time", 
-        "box": (81, 1231, 349, 1309) # “运动时长”提供的新坐标
-    },
-    {
-         "name": "BPM", 
-         "box": (247, 1866, 381, 1934) # 平均心率
-    },
-    {
-        "name": "max_BPM", 
-        "box": (812, 1867, 944, 1935) # 最大心率
-    },
-    {
-        "name": "active_calories", 
-        "box": (464, 1240, 565, 1292) # 运动消耗卡路里
-    },
-    {
-        "name": "total_calories", 
-        "box": (801, 1231, 913, 1292) # 静息消耗+运动消耗的卡路里
-    }
+    # You can add more data types here...
 ]
-
-# ===================================================================
-#       运动类型中英文映射 (Sport Type Mapping)
-# ===================================================================
-# 将从 "sport_type" 字段中提取的值映射到所需的英文值。
-# 如果OCR提取的文本是 "室内跑步"，它将在processed_data中被转换为 "run"。
-# 您可以根据需要在此处添加更多映射。
-# 格式: "中文运动类型": "english_value"
-# ===================================================================
-
-SPORT_TYPE_MAPPING = {
-    "室内跑步": "run"
-}

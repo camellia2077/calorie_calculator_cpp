@@ -1,3 +1,4 @@
+# graph_parser.py
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -92,19 +93,28 @@ class GraphParser:
                 writer.writerow([f"{time_sec:.2f}", f"{val:.2f}"])
         print(f"数据已成功保存到 {filename}")
 
-    def plot_results(self, title: str, xlabel: str, ylabel: str, save_path=None):
-        if not self.data_points: return
-        time_vals = [p[0] for p in self.data_points]
-        val_vals = [p[1] for p in self.data_points]
+    def plot_results(self, data_points: list, title: str, xlabel: str, ylabel: str, save_path=None, color='r'):
+        """一个可以绘制任何 (x, y) 数据点列表的通用绘图函数。"""
+        if not data_points:
+            print("警告：没有可供绘图的数据点。")
+            return
+            
+        time_vals = [p[0] for p in data_points]
+        val_vals = [p[1] for p in data_points]
+        
         plt.figure(figsize=(10, 5))
-        plt.plot(time_vals, val_vals, color='r')
-        plt.title(title); plt.xlabel(xlabel); plt.ylabel(ylabel)
+        plt.plot(time_vals, val_vals, color=color)
+        plt.title(title)
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
         plt.grid(True)
+        
         if save_path:
             plt.savefig(save_path)
             print(f"图表已保存到: {save_path}")
         else:
             plt.show()
+            
         plt.close()
 
 def parse_time_to_seconds(time_str: str) -> float:

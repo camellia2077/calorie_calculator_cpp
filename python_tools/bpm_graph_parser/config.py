@@ -1,56 +1,57 @@
+# config.py
 # ===================================================================
-#                      图表解析器 - 配置文件
+#                      Graph Parser - Configuration File
 # ===================================================================
 
-# --- 1. 基本配置 (Basic Configuration) ---
-# 要分析的图片文件路径
+# --- 1. Basic Configuration ---
+# Path to the image file to be analyzed
 IMAGE_FILE = r'bpm.jpg'
-# 输出的CSV文件名
+# Output CSV file name
 CSV_OUTPUT_FILE = "extracted_data.csv"
-# 输出的图表图片文件名
+# Output chart image file name
 PLOT_OUTPUT_FILE = "extracted_plot.png"
 
 
-# --- 2. 图像坐标配置 (固定值) ---
-# 这些坐标对于所有数据类型都是共享的
+# --- 2. Image Coordinate Configuration (Fixed) ---
+# These coordinates are shared by all data types
 
-# 图表网格区域的左上角和右下角像素坐标 (x, y)
+# Top-left and bottom-right pixel coordinates of the graph grid area (x, y)
 TOP_LEFT_PX = (164, 414)
 BOTTOM_RIGHT_PX = (2505, 1077)
 
-# 结束时间文本的OCR识别区域 (左上x, 左上y, 右下x, 右下y)
+# OCR area for the end time text (top-left x, top-left y, bottom-right x, bottom-right y)
 OCR_END_TIME_BOX = (2374, 1099, 2500, 1130)
 
 
-# --- 3. 数据类型配置 (可扩展) ---
+# --- 3. Data Type Configuration (Extensible) ---
 
-# MODIFIED: 在这里指定你本次想要识别的数据类型的 "name"
-# 例如，设置为 "心率" 或 "步频"
-TARGET_DATA_NAME = "心率"
+# MODIFIED: Specify the "name" of the data type you want to recognize
+# For example, set it to "Heart Rate" or "Cadence"
+TARGET_DATA_NAME = "Heart Rate"
 
-# 在此列表中定义您想解析的各种数据类型。
-# 程序将根据上面的 TARGET_DATA_NAME 查找并使用对应的配置。
+# Define the data types you want to parse in this list.
+# The program will look up and use the corresponding configuration based on TARGET_DATA_NAME.
 DATA_TYPES = [
     {
-        "name": "心率",                 # 数据名称
-        "unit": "BPM",                  # 数据单位
-        "y_axis_min": 30.0,             # Y轴最小值
-        "y_axis_max": 210.0,            # Y轴最大值
-        "color_ranges": [               # 线条的HSV颜色范围
-            # 红色范围 (包含两个部分)
+        "name": "Heart Rate",                 # Data name
+        "unit": "BPM",                      # Data unit
+        "y_axis_min": 30.0,                 # Y-axis minimum value
+        "y_axis_max": 210.0,                # Y-axis maximum value
+        "color_ranges": [                   # HSV color ranges for the line
+            # Red color range (includes two parts)
             ([0, 70, 50], [10, 255, 255]),
             ([170, 70, 50], [180, 255, 255]),
         ]
     },
     {
-        "name": "步频",                 # 您可以添加其他类型，例如步频
-        "unit": "spm",                  # strides per minute
+        "name": "Cadence",                   # You can add other types, like Cadence
+        "unit": "spm",                      # strides per minute
         "y_axis_min": 0.0,
         "y_axis_max": 220.0,
         "color_ranges": [
-             # 黄色的示例范围
+             # Example range for yellow
              ([25, 70, 50], [35, 255, 255]),
         ]
     },
-    # 在这里可以继续添加更多数据类型...
+    # You can add more data types here...
 ]
