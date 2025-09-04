@@ -2,7 +2,8 @@ import sys
 import os
 import config  # Your field configuration
 from ocr_extractor import OcrExtractor
-from data_saver import save_dict_to_json, sanitize_filename
+# --- MODIFIED: Import the new function from data_saver ---
+from data_saver import save_dict_to_json, sanitize_filename, convert_to_24_hour_format
 
 def validate_config():
     """
@@ -40,22 +41,32 @@ def process_image(extractor: OcrExtractor, image_path: str):
         print(f"Error processing this image: {extracted_data['error']}")
         return  # Skip to the next image
 
-    start_time_value = extracted_data.get("start_time")
-    if not start_time_value:
+    if "start_time" not in extracted_data or not extracted_data["start_time"]:
         print("Error: The critical field 'start_time' could not be extracted or is empty.")
         print("Skipping JSON file generation for this image.")
         return  # Skip to the next image
 
+    # --- MODIFIED: Rebuild the dictionary to ensure desired key order ---
+    ordered_data = {}
+    for key, value in extracted_data.items():
+        # Add the current key-value pair to the new dictionary
+        ordered_data[key] = value
+        # If the key is 'start_time', calculate and insert 'start_time_24' immediately after
+        if key == "start_time":
+            start_time_24h = convert_to_24_hour_format(value)
+            ordered_data["start_time_24"] = start_time_24h
+    # --- END OF MODIFICATION ---
+
     # Part 3: Save the data for the current image.
     try:
-        # Create a safe base filename from the extracted time
-        base_filename = sanitize_filename(start_time_value) + ".json"
+        # Create a safe base filename from the original extracted time
+        base_filename = sanitize_filename(extracted_data["start_time"]) + ".json"
         
         # Combine the output directory with the base filename to get the full path
         output_path = os.path.join(config.JSON_OUTPUT_DIRECTORY, base_filename)
         
-        # Save the dictionary to the specified path
-        save_dict_to_json(extracted_data, output_path)
+        # Save the newly ordered dictionary to the specified path
+        save_dict_to_json(ordered_data, output_path)
         print(f"Success! Data saved to: {output_path}")
     except Exception as e:
         print(f"An error occurred while writing the JSON file: {e}")
