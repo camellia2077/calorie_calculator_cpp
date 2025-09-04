@@ -2,7 +2,7 @@ import sys
 import os
 import config  # Your field configuration
 from ocr_extractor import OcrExtractor
-# --- MODIFIED: Import the new unix timestamp conversion function ---
+# Import the helper functions from data_saver
 from data_saver import (
     save_dict_to_json, 
     sanitize_filename, 
@@ -52,35 +52,33 @@ def process_image(extractor: OcrExtractor, image_path: str):
         print("Skipping JSON file generation for this image.")
         return  # Skip to the next image
 
-    # --- MODIFIED: Add Unix timestamp to the "processed_data" key ---
+    # --- MODIFIED: Elevate Unix timestamp to the top level ---
     
     # Initialize the final dictionary that will be saved to JSON.
     final_data = {}
+    
+    # Generate the 24-hour timestamp first, as it's needed for the Unix timestamp.
+    start_time_24h = convert_to_24_hour_format(extracted_data.get("start_time", ""))
+
+    # --- NEW: Calculate and add the Unix timestamp to the TOP-LEVEL dictionary ---
+    unix_timestamp = convert_iso_to_unix(start_time_24h)
+    final_data["unix_timestamp"] = unix_timestamp
 
     # Place all the raw OCR results under the "raw_data" key.
     final_data["raw_data"] = extracted_data
     
-    # Now, build the "processed_data" dictionary using values from "raw_data".
-    
-    # Generate the 24-hour timestamp from the raw start_time.
-    start_time_24h = convert_to_24_hour_format(final_data["raw_data"].get("start_time", ""))
-
-    # Initialize the "processed_data" sub-dictionary.
+    # Now, build the "processed_data" dictionary.
     processed_data_dict = {}
 
-    # Add the 24-hour timestamp to the "processed_data" dictionary.
+    # Add the 24-hour timestamp.
     processed_data_dict["start_time_24"] = start_time_24h
 
-    # --- NEW: Convert the ISO time to a Unix timestamp and add it ---
-    unix_timestamp = convert_iso_to_unix(start_time_24h)
-    processed_data_dict["unix_timestamp"] = unix_timestamp
-
-    # Get the time string from raw_data, parse it, and add the components.
+    # Parse and add the time components (h, m, s).
     time_str = final_data["raw_data"].get("time", "")
     time_components = parse_time_to_hms(time_str)
-    processed_data_dict.update(time_components) # .update() merges the two dictionaries
+    processed_data_dict.update(time_components)
 
-    # Add the completed "processed_data" dictionary to the main data object at the top level.
+    # Add the completed "processed_data" dictionary to the main data object.
     final_data["processed_data"] = processed_data_dict
     # --- END OF MODIFICATION ---
 
