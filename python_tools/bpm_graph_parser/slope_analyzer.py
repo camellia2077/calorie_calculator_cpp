@@ -1,41 +1,43 @@
 # slope_analyzer.py
-
-# This import MUST be the first line in the file.
 from __future__ import annotations
-
 import csv
+import json
 from typing import TYPE_CHECKING
 
-# This block is used for type hinting to avoid circular import errors
 if TYPE_CHECKING:
     from graph_parser import GraphParser
 
 def save_data_to_csv(data: list, header: list, filename: str):
     """
     Saves a list of (x, y) tuples to a specified CSV file.
-
-    Parameters:
-    data (list): The list of data points to save.
-    header (list): A list of strings for the CSV header row.
-    filename (str): The name of the file to save the data to.
     """
     print(f"正在将斜率数据保存到 {filename}...")
     try:
         with open(filename, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(header)
-            # Write data rows, formatted to 2 decimal places for consistency
             for row in data:
                 writer.writerow([f"{row[0]:.2f}", f"{row[1]:.2f}"])
         print(f"数据已成功保存到 {filename}")
     except IOError as e:
         print(f"错误：无法写入文件 {filename}。原因: {e}")
 
-def analyze_and_plot_slope(data_points: list, target_config: dict, parser: 'GraphParser'):
+def save_data_to_json(data: list, time_key: str, value_key: str, filename: str):
     """
-    Calculates the slope, saves it to a CSV, and generates two plots:
-    1. A color-coded bar chart.
-    2. A color-coded scatter plot with a zero-line reference.
+    Saves a list of (x, y) tuples to a specified JSON file.
+    """
+    print(f"正在将斜率数据保存到 {filename}...")
+    output_data = [{time_key: float(f"{row[0]:.2f}"), value_key: float(f"{row[1]:.2f}")} for row in data]
+    try:
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(output_data, f, indent=4, ensure_ascii=False)
+        print(f"数据已成功保存到 {filename}")
+    except IOError as e:
+        print(f"错误：无法写入文件 {filename}。原因: {e}")
+
+def analyze_and_plot_slope(data_points: list, target_config: dict, parser: 'GraphParser', total_duration_sec: float):
+    """
+    Calculates the slope, saves it to a CSV and JSON, and generates two plots.
     """
     print("\n--- 开始分析和绘制斜率图 ---")
     slope_data = []
@@ -52,7 +54,6 @@ def analyze_and_plot_slope(data_points: list, target_config: dict, parser: 'Grap
     if slope_data:
         print(f"已计算 {len(slope_data)} 个斜率点。")
 
-        # --- 将斜率数据保存到 CSV 文件 ---
         csv_filename = "slope_data.csv"
         csv_header = [
             'Time (seconds)',
@@ -60,7 +61,9 @@ def analyze_and_plot_slope(data_points: list, target_config: dict, parser: 'Grap
         ]
         save_data_to_csv(slope_data, csv_header, csv_filename)
 
-        # --- 生成图表 1: 彩色条形图 (Color-Coded Bars) ---
+        json_filename = f"{int(total_duration_sec)}_slope.json"
+        save_data_to_json(slope_data, time_key='time_sec', value_key='slope', filename=json_filename)
+
         bar_chart_filename = "slope_bar_chart.png"
         print(f"正在生成斜率条形图: {bar_chart_filename}")
         parser.plot_results(
@@ -72,7 +75,6 @@ def analyze_and_plot_slope(data_points: list, target_config: dict, parser: 'Grap
             plot_style='bar'
         )
 
-        # --- 生成图表 2: 带参考线的散点图 (Zero-Line Reference Scatter) ---
         scatter_plot_filename = "slope_scatter_plot.png"
         print(f"正在生成斜率散点图: {scatter_plot_filename}")
         

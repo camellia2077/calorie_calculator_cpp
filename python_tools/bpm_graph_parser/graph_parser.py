@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
+import json
 import easyocr
 
 class GraphParser:
@@ -93,6 +94,16 @@ class GraphParser:
                 writer.writerow([f"{time_sec:.2f}", f"{val:.2f}"])
         print(f"数据已成功保存到 {filename}")
 
+    def save_to_json(self, data_points: list, filename: str, time_key: str = 'time', value_key: str = 'value'):
+        """
+        将数据点保存为JSON文件。
+        格式: [{"time": t1, "value_key": v1}, ...]
+        """
+        output_data = [{time_key: float(f"{p[0]:.2f}"), value_key: float(f"{p[1]:.2f}")} for p in data_points]
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(output_data, f, indent=4, ensure_ascii=False)
+        print(f"数据已成功保存到 {filename}")
+
     def plot_results(self, data_points: list, title: str, xlabel: str, ylabel: str, save_path=None, color='r', plot_style='line'):
         """
         一个可以绘制任何 (x, y) 数据点列表的通用绘图函数。
@@ -110,11 +121,10 @@ class GraphParser:
         if plot_style == 'line':
             plt.plot(time_vals, val_vals, color=color)
         elif plot_style == 'scatter':
-            # 'c'参数可以接受颜色列表，'color'是其别名
             plt.scatter(time_vals, val_vals, c=color, s=10, marker='o')
             plt.axhline(0, color='grey', linewidth=0.8, linestyle='--')
         elif plot_style == 'bar':
-            bar_colors = ['#d62728' if v > 0 else '#1f77b4' for v in val_vals] # 红色代表正值, 蓝色代表负值
+            bar_colors = ['#d62728' if v > 0 else '#1f77b4' for v in val_vals]
             plt.bar(time_vals, val_vals, color=bar_colors, width=1.0)
             plt.axhline(0, color='grey', linewidth=0.8, linestyle='--')
         else:
